@@ -1,0 +1,5 @@
+node_modules/
+data/
+views/_rendered*.html
+.DS_Store
+screenshots/

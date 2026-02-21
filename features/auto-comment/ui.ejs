@@ -1,0 +1,95 @@
+<div class="bg-dark-300 rounded-lg p-3">
+  <h3 class="text-xs text-gray-500 uppercase tracking-wider mb-2">Auto Comment</h3>
+
+  <!-- Inner tabs -->
+  <div class="flex gap-1 mb-3">
+    <button onclick="switchCommentTab('targets')" class="comment-tab px-3 py-1.5 rounded-md text-xs font-semibold transition bg-accent text-white" data-ctab="targets">Target URLs</button>
+    <button onclick="switchCommentTab('content')" class="comment-tab px-3 py-1.5 rounded-md text-xs font-semibold transition bg-dark-100 text-gray-400 hover:text-white" data-ctab="content">Comment & Settings</button>
+  </div>
+
+  <!-- TAB: Target URLs -->
+  <div class="comment-panel" data-cpanel="targets">
+    <div class="flex gap-1.5 mb-2">
+      <button onclick="toggleAddUrl()" class="px-2 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-semibold transition">+ Add URL</button>
+      <button onclick="importCommentUrls()" class="px-2 py-1.5 bg-dark-100 hover:bg-accent text-gray-300 hover:text-white rounded text-xs font-semibold transition">📂 Import</button>
+      <button onclick="exportCommentUrls()" class="px-2 py-1.5 bg-dark-100 hover:bg-accent text-gray-300 hover:text-white rounded text-xs font-semibold transition">💾 Export</button>
+      <button onclick="clearCommentUrls()" class="px-2 py-1.5 bg-dark-100 hover:bg-red-600 text-gray-300 hover:text-white rounded text-xs font-semibold transition">✕ Clear</button>
+    </div>
+
+    <!-- Inline add URL form -->
+    <div id="addUrlRow" class="hidden mb-2">
+      <div class="flex gap-1.5">
+        <input type="text" id="newCommentUrl" placeholder="https://www.facebook.com/..." class="flex-1 px-2.5 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+        <button onclick="confirmAddUrl()" class="px-3 py-1.5 bg-accent hover:bg-accent-light text-white rounded text-xs font-bold transition">Add</button>
+      </div>
+    </div>
+
+    <div class="text-xs text-gray-500 mb-1">
+      Targets: <span id="commentUrlCount" class="text-emerald-400 font-bold">0</span>
+    </div>
+
+    <div class="max-h-[200px] overflow-y-auto rounded border border-dark-100">
+      <table class="w-full text-xs">
+        <thead>
+          <tr class="bg-dark-400 text-gray-500 uppercase sticky top-0">
+            <th class="px-2 py-1 text-left w-6">No</th>
+            <th class="px-2 py-1 text-left">Post URL</th>
+            <th class="px-2 py-1 text-left w-16">Status</th>
+            <th class="px-2 py-1 w-6"></th>
+          </tr>
+        </thead>
+        <tbody id="commentUrlTable">
+          <tr><td colspan="4" class="px-2 py-3 text-center text-gray-600">No targets. Add URLs above.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB: Comment & Settings -->
+  <div class="comment-panel hidden" data-cpanel="content">
+    <!-- Comment text -->
+    <div class="mb-3">
+      <label class="block text-[11px] text-gray-500 mb-1">Comment Text <span class="text-gray-600">(use {{opt1|opt2}} for spintax)</span></label>
+      <textarea id="commentTextField" rows="3" placeholder="Your comment here..." class="w-full px-2.5 py-2 bg-dark-100 border border-dark-300 rounded-md text-sm text-gray-200 outline-none focus:border-accent resize-none"></textarea>
+    </div>
+
+    <!-- Image -->
+    <div class="mb-3">
+      <label class="block text-[11px] text-gray-500 mb-1">Image (optional)</label>
+      <div class="flex gap-1.5">
+        <input type="text" id="commentImagePath" readonly placeholder="No image selected" class="flex-1 px-2.5 py-2 bg-dark-100 border border-dark-300 rounded-md text-xs text-gray-400 outline-none">
+        <button onclick="pickCommentImage()" class="px-3 py-2 bg-dark-100 hover:bg-accent text-gray-300 hover:text-white rounded text-xs font-semibold transition">📷 Pick</button>
+        <button onclick="clearCommentImage()" class="px-2 py-2 bg-dark-100 hover:bg-red-600 text-gray-300 hover:text-white rounded text-xs font-semibold transition">✕</button>
+      </div>
+    </div>
+
+    <!-- Timing -->
+    <div class="mb-3">
+      <label class="block text-[11px] text-gray-500 mb-1">Timing</label>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="text-[10px] text-gray-600">Delay Min (sec)</label>
+          <input type="number" id="commentDelayMin" value="10" min="1" class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+        </div>
+        <div>
+          <label class="text-[10px] text-gray-600">Delay Max (sec)</label>
+          <input type="number" id="commentDelayMax" value="30" min="1" class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+        </div>
+        <div>
+          <label class="text-[10px] text-gray-600">Rest after N comments</label>
+          <input type="number" id="commentRestAfter" value="5" min="0" class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+        </div>
+        <div>
+          <label class="text-[10px] text-gray-600">Rest duration (sec)</label>
+          <input type="number" id="commentRestSeconds" value="300" min="0" class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+        </div>
+      </div>
+    </div>
+
+    <!-- Start / Stop -->
+    <div class="flex gap-1.5">
+      <button id="btnStartComment" onclick="startAutoComment()" class="flex-1 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-md text-sm font-bold transition">▶ Start</button>
+      <button id="btnStopComment" onclick="stopAutoComment()" disabled class="flex-1 px-3 py-2 bg-red-700 hover:bg-red-600 text-white rounded-md text-sm font-bold transition disabled:opacity-40 disabled:cursor-not-allowed">⏹ Stop</button>
+    </div>
+  </div>
+</div>

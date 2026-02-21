@@ -1,0 +1,57 @@
+<div class="bg-dark-300 rounded-lg p-3">
+  <h3 class="text-xs text-gray-500 uppercase tracking-wider mb-2">Get Joined Groups</h3>
+
+  <!-- Control buttons -->
+  <div class="flex gap-1.5 mb-3">
+    <button id="btnStartGroups" onclick="startGetGroups()"
+      class="flex-1 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-md text-sm font-semibold transition">
+      ▶ Start
+    </button>
+    <button id="btnStopGroups" onclick="stopGetGroups()" disabled
+      class="flex-1 px-3 py-2 bg-red-700 hover:bg-red-600 text-white rounded-md text-sm font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed">
+      ⏹ Stop
+    </button>
+    <button onclick="clearGroups()"
+      class="px-3 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-md text-sm font-semibold transition">
+      ✕ Clear
+    </button>
+  </div>
+
+  <!-- File buttons -->
+  <div class="flex gap-1.5 mb-3">
+    <button onclick="saveGroupsTxt()"
+      class="flex-1 px-2 py-1.5 bg-dark-100 hover:bg-accent text-gray-300 hover:text-white rounded text-xs font-semibold transition">
+      💾 Save TXT
+    </button>
+    <button onclick="importGroupsTxt()"
+      class="flex-1 px-2 py-1.5 bg-dark-100 hover:bg-accent text-gray-300 hover:text-white rounded text-xs font-semibold transition">
+      📂 Import TXT
+    </button>
+    <button onclick="exportToAutoPost()"
+      class="flex-1 px-2 py-1.5 bg-dark-100 hover:bg-accent text-gray-300 hover:text-white rounded text-xs font-semibold transition">
+      📤 Export to Auto Post
+    </button>
+  </div>
+
+  <!-- Count -->
+  <div class="text-xs text-gray-500 mb-2">
+    Found: <span id="groupCount" class="text-emerald-400 font-bold">0</span> groups
+    <span id="groupScrapingStatus" class="ml-2 text-yellow-400 hidden">⏳ Scraping...</span>
+  </div>
+
+  <!-- Table -->
+  <div class="max-h-[300px] overflow-y-auto rounded border border-dark-100">
+    <table class="w-full text-xs">
+      <thead>
+        <tr class="bg-dark-400 text-gray-500 uppercase sticky top-0">
+          <th class="px-2 py-1.5 text-left w-8">No</th>
+          <th class="px-2 py-1.5 text-left">Group Name</th>
+          <th class="px-2 py-1.5 text-left w-28">Group ID</th>
+        </tr>
+      </thead>
+      <tbody id="groupTableBody">
+        <tr><td colspan="3" class="px-2 py-4 text-center text-gray-600">No groups yet. Click Start to begin.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
