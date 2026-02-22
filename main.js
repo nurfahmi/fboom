@@ -1,5 +1,5 @@
 const { app, BrowserWindow, ipcMain } = require('electron')
-const { BrowserManager } = require('electron-automation-core')
+const { BrowserManager } = require('ishbrowser')
 const path = require('path')
 const ejs = require('ejs')
 const fs = require('fs')

@@ -137,9 +137,9 @@ async function commentOnPost(page, commentText, imagePath) {
   // STEP 4: Upload image if provided
   if (imagePath && fs.existsSync(imagePath)) {
     try {
-      await page.click('[aria-label*="photo"]')
-      await page.waitForTimeout(1000)
-      await page.upload('input[type="file"]', imagePath)
+      // await page.click('[aria-label*="photo"]')
+      // await page.waitForTimeout(1000)
+      await page.upload('[role="dialog"] [role="table"] input[type="file"]', imagePath)
       await page.waitForTimeout(3000)
     } catch (e) { /* optional */ }
   }
