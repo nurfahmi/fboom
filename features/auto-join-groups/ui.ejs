@@ -1,0 +1,121 @@
+<div class="bg-dark-300 rounded-lg p-3">
+    <h3 class="text-xs text-gray-500 uppercase tracking-wider mb-2">Auto Join Groups</h3>
+
+    <!-- ===== SECTION 1: SEARCH GROUPS ===== -->
+    <div class="mb-3 border border-dark-100 rounded-lg p-2.5">
+        <h4 class="text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-2">🔍 Search Groups</h4>
+
+        <div class="grid grid-cols-3 gap-2 mb-2">
+            <div class="col-span-2">
+                <label class="text-[10px] text-gray-600">Keyword</label>
+                <input type="text" id="jgKeyword" placeholder="e.g. jual beli online"
+                    class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+            </div>
+            <div>
+                <label class="text-[10px] text-gray-600">Limit</label>
+                <input type="number" id="jgLimit" value="20" min="1" max="500"
+                    class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+            </div>
+        </div>
+
+        <div class="flex gap-1.5">
+            <button id="btnStartSearch" onclick="startSearchGroups()"
+                class="flex-1 px-2 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-bold transition">🔍
+                Start Search</button>
+            <button id="btnStopSearch" onclick="stopSearchGroups()" disabled
+                class="flex-1 px-2 py-1.5 bg-red-700 hover:bg-red-600 text-white rounded text-xs font-bold transition disabled:opacity-40 disabled:cursor-not-allowed">⏹
+                Stop Search</button>
+        </div>
+
+        <!-- Search status -->
+        <div id="jgSearchStatus" class="text-[10px] text-gray-500 mt-1.5 hidden">
+            <span id="jgSearchMsg"></span>
+        </div>
+    </div>
+
+    <!-- ===== SECTION 2: JOIN CONTROL ===== -->
+    <div class="mb-3 border border-dark-100 rounded-lg p-2.5">
+        <h4 class="text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-2">🤝 Join Control</h4>
+
+        <div class="grid grid-cols-2 gap-2 mb-2">
+            <div>
+                <label class="text-[10px] text-gray-600">Delay Min (sec)</label>
+                <input type="number" id="jgDelayMin" value="30" min="1"
+                    class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+            </div>
+            <div>
+                <label class="text-[10px] text-gray-600">Delay Max (sec)</label>
+                <input type="number" id="jgDelayMax" value="120" min="1"
+                    class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+            </div>
+            <div>
+                <label class="text-[10px] text-gray-600">Rest after N joins</label>
+                <input type="number" id="jgRestAfter" value="5" min="0"
+                    class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+            </div>
+            <div>
+                <label class="text-[10px] text-gray-600">Rest duration (sec)</label>
+                <input type="number" id="jgRestSeconds" value="300" min="0"
+                    class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+            </div>
+        </div>
+
+        <div class="flex gap-1.5">
+            <button id="btnStartJoin" onclick="startJoinGroups()"
+                class="flex-1 px-2 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-bold transition">▶
+                Start Join</button>
+            <button id="btnStopJoin" onclick="stopJoinGroups()" disabled
+                class="flex-1 px-2 py-1.5 bg-red-700 hover:bg-red-600 text-white rounded text-xs font-bold transition disabled:opacity-40 disabled:cursor-not-allowed">⏹
+                Stop Join</button>
+        </div>
+    </div>
+
+    <!-- ===== SECTION 3: GROUPS LIST ===== -->
+    <div class="border border-dark-100 rounded-lg p-2.5">
+        <h4 class="text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-2">📋 Groups List</h4>
+
+        <!-- Control buttons -->
+        <div class="flex gap-1.5 mb-2">
+            <button onclick="loadJoinGroupsTxt()"
+                class="px-2 py-1.5 bg-dark-100 hover:bg-accent text-gray-300 hover:text-white rounded text-xs font-semibold transition">📂
+                Load TXT</button>
+            <button onclick="saveJoinGroupsTxt()"
+                class="px-2 py-1.5 bg-dark-100 hover:bg-accent text-gray-300 hover:text-white rounded text-xs font-semibold transition">💾
+                Save TXT</button>
+            <button onclick="clearJoinGroups()"
+                class="px-2 py-1.5 bg-dark-100 hover:bg-red-600 text-gray-300 hover:text-white rounded text-xs font-semibold transition">✕
+                Clear</button>
+        </div>
+
+        <!-- Filter -->
+        <div class="mb-2">
+            <input type="text" id="jgFilter" oninput="renderJoinGroupsTable()" placeholder="🔍 Filter by name..."
+                class="w-full px-2.5 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+        </div>
+
+        <!-- Count -->
+        <div class="text-xs text-gray-500 mb-1">
+            Groups: <span id="jgCount" class="text-emerald-400 font-bold">0</span>
+        </div>
+
+        <!-- Table -->
+        <div class="max-h-[250px] overflow-y-auto rounded border border-dark-100">
+            <table class="w-full text-xs">
+                <thead>
+                    <tr class="bg-dark-400 text-gray-500 uppercase sticky top-0">
+                        <th class="px-2 py-1 text-left w-6">No</th>
+                        <th class="px-2 py-1 text-left">Group Name</th>
+                        <th class="px-2 py-1 text-left w-24">Group ID</th>
+                        <th class="px-2 py-1 text-left w-16">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="jgTableBody">
+                    <tr>
+                        <td colspan="4" class="px-2 py-3 text-center text-gray-600">No groups. Search or load from TXT.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

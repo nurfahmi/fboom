@@ -86,7 +86,22 @@ async function importGroupsTxt() {
 
 function exportToAutoPost() {
   if (joinedGroups.length === 0) { setStatus('No groups to export', 'error'); return }
-  setStatus('Export to Auto Post: ' + joinedGroups.length + ' groups ready', 'info')
+  if (typeof importGroupsToAutoPost === 'function') {
+    importGroupsToAutoPost(joinedGroups)
+    setStatus(`✅ Exported ${joinedGroups.length} groups to Auto Post Groups`, 'success')
+  } else {
+    setStatus('Auto Post Groups feature not available', 'error')
+  }
+}
+
+function exportToAutoShare() {
+  if (joinedGroups.length === 0) { setStatus('No groups to export', 'error'); return }
+  if (typeof importGroupsToAutoShare === 'function') {
+    importGroupsToAutoShare(joinedGroups)
+    setStatus(`✅ Exported ${joinedGroups.length} groups to Auto Share Groups`, 'success')
+  } else {
+    setStatus('Auto Share Groups feature not available', 'error')
+  }
 }
 
 function updateGroupButtons() {

@@ -1,0 +1,116 @@
+<div class="bg-dark-300 rounded-lg p-3">
+    <h3 class="text-xs text-gray-500 uppercase tracking-wider mb-2">Auto Share Groups</h3>
+
+    <!-- Inner tabs -->
+    <div class="flex gap-1 mb-3">
+        <button onclick="switchShareGroupTab('targets')"
+            class="sg-tab px-3 py-1.5 rounded-md text-xs font-semibold transition bg-accent text-white"
+            data-sgtab="targets">Target Groups</button>
+        <button onclick="switchShareGroupTab('content')"
+            class="sg-tab px-3 py-1.5 rounded-md text-xs font-semibold transition bg-dark-100 text-gray-400 hover:text-white"
+            data-sgtab="content">Share Content</button>
+    </div>
+
+    <!-- TAB: Target Groups -->
+    <div class="sg-panel" data-sgpanel="targets">
+        <!-- Control buttons -->
+        <div class="flex gap-1.5 mb-2">
+            <button onclick="loadShareGroupsTxt()"
+                class="px-2 py-1.5 bg-dark-100 hover:bg-accent text-gray-300 hover:text-white rounded text-xs font-semibold transition">📂
+                Load TXT</button>
+            <button onclick="saveShareGroupsTxt()"
+                class="px-2 py-1.5 bg-dark-100 hover:bg-accent text-gray-300 hover:text-white rounded text-xs font-semibold transition">💾
+                Save TXT</button>
+            <button onclick="clearShareGroups()"
+                class="px-2 py-1.5 bg-dark-100 hover:bg-red-600 text-gray-300 hover:text-white rounded text-xs font-semibold transition">✕
+                Clear</button>
+        </div>
+
+        <!-- Filter -->
+        <div class="mb-2">
+            <input type="text" id="sgFilter" oninput="renderShareGroupsTable()" placeholder="🔍 Filter by name..."
+                class="w-full px-2.5 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+        </div>
+
+        <!-- Count -->
+        <div class="text-xs text-gray-500 mb-1">
+            Groups: <span id="sgCount" class="text-emerald-400 font-bold">0</span>
+        </div>
+
+        <!-- Table -->
+        <div class="max-h-[250px] overflow-y-auto rounded border border-dark-100">
+            <table class="w-full text-xs">
+                <thead>
+                    <tr class="bg-dark-400 text-gray-500 uppercase sticky top-0">
+                        <th class="px-2 py-1 text-left w-6">No</th>
+                        <th class="px-2 py-1 text-left">Group Name</th>
+                        <th class="px-2 py-1 text-left w-24">Group ID</th>
+                        <th class="px-2 py-1 text-left w-16">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="sgTableBody">
+                    <tr>
+                        <td colspan="4" class="px-2 py-3 text-center text-gray-600">No groups. Load from TXT or import.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- TAB: Share Content -->
+    <div class="sg-panel hidden" data-sgpanel="content">
+        <!-- Post URL -->
+        <div class="mb-3">
+            <label class="block text-[11px] text-gray-500 mb-1">Facebook Post URL <span
+                    class="text-red-400">*</span></label>
+            <input type="text" id="sgPostUrl" placeholder="https://www.facebook.com/..."
+                class="w-full px-2.5 py-2 bg-dark-100 border border-dark-300 rounded-md text-sm text-gray-200 outline-none focus:border-accent">
+        </div>
+
+        <!-- Caption -->
+        <div class="mb-3">
+            <label class="block text-[11px] text-gray-500 mb-1">Caption <span class="text-gray-600">(optional, use
+                    {{opt1|opt2}} for spintax)</span></label>
+            <textarea id="sgCaption" rows="3" placeholder="Write your share caption..."
+                class="w-full px-2.5 py-2 bg-dark-100 border border-dark-300 rounded-md text-sm text-gray-200 outline-none focus:border-accent resize-none"></textarea>
+        </div>
+
+        <!-- Timing -->
+        <div class="mb-3">
+            <label class="block text-[11px] text-gray-500 mb-1">Timing</label>
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="text-[10px] text-gray-600">Delay Min (sec)</label>
+                    <input type="number" id="sgDelayMin" value="10" min="1"
+                        class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+                </div>
+                <div>
+                    <label class="text-[10px] text-gray-600">Delay Max (sec)</label>
+                    <input type="number" id="sgDelayMax" value="120" min="1"
+                        class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+                </div>
+                <div>
+                    <label class="text-[10px] text-gray-600">Rest after N shares</label>
+                    <input type="number" id="sgRestAfter" value="5" min="0"
+                        class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+                </div>
+                <div>
+                    <label class="text-[10px] text-gray-600">Rest duration (sec)</label>
+                    <input type="number" id="sgRestSeconds" value="300" min="0"
+                        class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+                </div>
+            </div>
+        </div>
+
+        <!-- Start / Stop -->
+        <div class="flex gap-1.5">
+            <button id="btnStartShareGroups" onclick="startAutoShareGroups()"
+                class="flex-1 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-md text-sm font-bold transition">▶
+                Start</button>
+            <button id="btnStopShareGroups" onclick="stopAutoShareGroups()" disabled
+                class="flex-1 px-3 py-2 bg-red-700 hover:bg-red-600 text-white rounded-md text-sm font-bold transition disabled:opacity-40 disabled:cursor-not-allowed">⏹
+                Stop</button>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,98 @@
+<div class="bg-dark-300 rounded-lg p-3">
+    <h3 class="text-xs text-gray-500 uppercase tracking-wider mb-2">Feed Engagement</h3>
+
+    <!-- ===== SECTION 1: AUTO LIKES ===== -->
+    <div class="mb-3 border border-dark-100 rounded-lg p-2.5">
+        <h4 class="text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-2">❤️ Auto Likes</h4>
+
+        <div class="mb-1">
+            <label class="text-[10px] text-gray-600">Number of Likes</label>
+            <input type="number" id="feTargetLikes" value="10" min="0" max="1000"
+                class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+        </div>
+    </div>
+
+    <!-- ===== SECTION 2: AUTO COMMENTS ===== -->
+    <div class="mb-3 border border-dark-100 rounded-lg p-2.5">
+        <h4 class="text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-2">💬 Auto Comments</h4>
+
+        <div class="mb-2">
+            <label class="text-[10px] text-gray-600">Number of Comments</label>
+            <input type="number" id="feTargetComments" value="5" min="0" max="500"
+                class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+        </div>
+
+        <!-- Add Comment Form -->
+        <div class="border border-dark-100 rounded-lg p-2 mb-2">
+            <label class="text-[10px] text-gray-600">Add Comment Template</label>
+            <textarea id="feNewCommentText" rows="2" placeholder="Write comment text... (supports {{spin|text}})"
+                class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent resize-none mb-1.5"></textarea>
+
+            <div class="flex gap-1.5 items-center">
+                <button onclick="pickFeedCommentImage()"
+                    class="px-2 py-1 bg-dark-100 hover:bg-accent text-gray-300 hover:text-white rounded text-[10px] font-semibold transition">📎
+                    Image</button>
+                <span id="feImageName" class="text-[10px] text-gray-600 truncate flex-1">No image</span>
+                <button onclick="addFeedComment()"
+                    class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-[10px] font-bold transition">+
+                    Add</button>
+            </div>
+        </div>
+
+        <!-- Comments Table -->
+        <div class="max-h-[150px] overflow-y-auto rounded border border-dark-100">
+            <table class="w-full text-xs">
+                <thead>
+                    <tr class="bg-dark-400 text-gray-500 uppercase sticky top-0">
+                        <th class="px-2 py-1 text-left w-6">No</th>
+                        <th class="px-2 py-1 text-left">Comment</th>
+                        <th class="px-2 py-1 text-left w-14">Image</th>
+                        <th class="px-2 py-1 text-center w-10">Act</th>
+                    </tr>
+                </thead>
+                <tbody id="feCommentsTableBody">
+                    <tr>
+                        <td colspan="4" class="px-2 py-2 text-center text-gray-600">No comments added.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ===== SECTION 3: CONTROL ===== -->
+    <div class="border border-dark-100 rounded-lg p-2.5">
+        <h4 class="text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-2">⚙️ Control Feed Engagement</h4>
+
+        <div class="grid grid-cols-2 gap-2 mb-2">
+            <div>
+                <label class="text-[10px] text-gray-600">Delay Min (sec)</label>
+                <input type="number" id="feDelayMin" value="10" min="1"
+                    class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+            </div>
+            <div>
+                <label class="text-[10px] text-gray-600">Delay Max (sec)</label>
+                <input type="number" id="feDelayMax" value="30" min="1"
+                    class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+            </div>
+            <div>
+                <label class="text-[10px] text-gray-600">Rest after N actions</label>
+                <input type="number" id="feRestAfter" value="10" min="0"
+                    class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+            </div>
+            <div>
+                <label class="text-[10px] text-gray-600">Rest duration (sec)</label>
+                <input type="number" id="feRestSeconds" value="120" min="0"
+                    class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+            </div>
+        </div>
+
+        <div class="flex gap-1.5">
+            <button id="btnStartFeed" onclick="startFeedEngagement()"
+                class="flex-1 px-2 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-bold transition">▶
+                Start Feed</button>
+            <button id="btnStopFeed" onclick="stopFeedEngagement()" disabled
+                class="flex-1 px-2 py-1.5 bg-red-700 hover:bg-red-600 text-white rounded text-xs font-bold transition disabled:opacity-40 disabled:cursor-not-allowed">⏹
+                Stop Feed</button>
+        </div>
+    </div>
+</div>
