@@ -2806,6 +2806,26 @@ async function humanTypeSlow(page, inputLocator, text) {
     await page.waitForTimeout(150 + Math.random() * 150);
 }
 
+async function humanClick(page, selector) {
+    const el = await page.locator(selector).first();
+    const box = await el.boundingBox();
+
+    if (!box) return;
+
+    // random point inside element
+    const x = box.x + box.width * (0.2 + Math.random() * 0.6);
+    const y = box.y + box.height * (0.2 + Math.random() * 0.6);
+
+    // move mouse gradually
+    await page.mouse.move(x, y, { steps: 15 + Math.floor(Math.random() * 10) });
+    await page.waitForTimeout(80 + Math.random() * 120);
+
+    // mouse down & up like human
+    await page.mouse.down();
+    await page.waitForTimeout(40 + Math.random() * 80);
+    await page.mouse.up();
+}
+
 // ============================================================
 // ROBUST LOCATION DROPDOWN CLICK HELPER
 // ============================================================
@@ -4608,6 +4628,104 @@ async function clickPublishButton(page) {
 
 
 
+// ========== FUNGSI VERIFIKASI STATUS MARKETPLACE ==========
+// DEPRECATED: Verifikasi tidak lagi digunakan - success ditentukan dari klik publish button
+// Verifikasi apakah produk benar-benar muncul di marketplace setelah posting
+/*
+async function verifyMarketplaceProduct(page, product) {
+    debugLog(`🔍 Verifying marketplace product: ${product.name}`);
+
+    try {
+        // Tunggu beberapa detik untuk memastikan produk diproses
+        await page.waitForTimeout(5000);
+
+        // Navigasi ke marketplace home untuk melihat produk terbaru
+        debugLog(`🏠 Navigating to marketplace home for verification...`);
+        await page.goto('https://www.facebook.com/marketplace/', {
+            waitUntil: 'domcontentloaded',
+            timeout: 60000
+        });
+
+        // Tunggu marketplace load
+        await page.waitForTimeout(5000);
+
+        // Scroll sedikit untuk load produk
+        await page.evaluate(() => {
+            window.scrollTo(0, 500);
+        });
+        await page.waitForTimeout(3000);
+
+        // Cari produk yang baru saja di-post
+        const productFound = await page.evaluate((productData) => {
+            // [browser] debugLog(`🔍 Looking for product: "${productData.name}" (${productData.price})`);
+
+            // Cari semua item produk di marketplace
+            const products = document.querySelectorAll('[data-pagelet*="Marketplace"], [role="article"], a[href*="/marketplace/item/"]');
+
+            // [browser] debugLog(`📊 Found ${products.length} product elements in marketplace`);
+
+            for (let i = 0; i < Math.min(products.length, 20); i++) { // Cek 20 produk teratas
+                const productEl = products[i];
+
+                try {
+                    // Cari teks produk
+                    const productText = productEl.textContent || '';
+                    const productTextLower = productText.toLowerCase();
+                    const productNameLower = productData.name.toLowerCase();
+
+                    // Cek nama produk (minimal 70% match)
+                    const nameWords = productNameLower.split(' ');
+                    let nameMatchCount = 0;
+
+                    for (const word of nameWords) {
+                        if (word.length > 2 && productTextLower.includes(word)) {
+                            nameMatchCount++;
+                        }
+                    }
+
+                    const nameMatchPercentage = nameWords.length > 0 ? (nameMatchCount / nameWords.length) * 100 : 0;
+
+                    // Cek harga (dengan toleransi)
+                    const priceFound = productText.includes(productData.price.toString()) ||
+                                     productText.includes(productData.price.toLocaleString('id-ID'));
+
+                    // [browser] debugLog(`🛒 Product ${i + 1}: Name match ${nameMatchCount}/${nameWords.length} (${nameMatchPercentage.toFixed(1)}%), Price: ${priceFound}`);
+
+                    if (nameMatchPercentage >= 70 && priceFound) {
+                        // [browser] debugLog(`✅ Product found with name and price match`);
+                        return true;
+                    }
+
+                    // Alternatif: Jika nama singkat tapi harga match
+                    if (nameMatchPercentage >= 50 && priceFound && productData.name.length < 20) {
+                        // [browser] debugLog(`✅ Product found with price match and reasonable name similarity`);
+                        return true;
+                    }
+
+                } catch (e) {
+                    // [browser] debugLog(`⚠️ Error checking product ${i + 1}:`, e.message);
+                }
+            }
+
+            // [browser] debugLog(`❌ No matching product found in recent marketplace listings`);
+            return false;
+
+        }, product);
+
+        if (productFound) {
+            userLog(`✅ VERIFICATION SUCCESS: Product confirmed in marketplace`);
+            return true;
+        } else {
+            debugLog(`❌ VERIFICATION FAILED: Product not found in marketplace`);
+            return false;
+        }
+
+    } catch (error) {
+        console.error(`❌ Error during marketplace product verification: ${error.message}`);
+        return false;
+    }
+}
+*/
 
 // Jalankan script
 if (require.main === module) {

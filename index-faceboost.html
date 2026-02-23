@@ -1,0 +1,1921 @@
+<!DOCTYPE html>
+<html lang="en" data-brand="faceboost">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FaceBoost - Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="css/tailwind.min.js"></script>
+    <link href="css/tailwind-components.css" rel="stylesheet">
+    <link href="css/faceboost-dashboard.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'Segoe UI', 'Tahoma', 'sans-serif'],
+                    },
+                    colors: {
+                        dark: {
+                            900: '#f8fafc',
+                            800: '#f1f5f9',
+                            700: '#e2e8f0',
+                            600: '#cbd5e1',
+                            500: '#94a3b8',
+                        }
+                    },
+                    animation: {
+                        'pulse-glow': 'pulseGlow 2s infinite',
+                        'spin-slow': 'spin 1s linear infinite',
+                    },
+                    keyframes: {
+                        pulseGlow: {
+                            '0%, 100%': { opacity: '1', transform: 'translateY(-50%) scale(1)' },
+                            '50%': { opacity: '0.7', transform: 'translateY(-50%) scale(1.2)' },
+                        },
+                    },
+                }
+            }
+        }
+    </script>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+</head>
+
+<body>
+    <!-- Background layers -->
+    <div class="fb-bg-mesh"></div>
+    <div class="fb-noise"></div>
+    <div class="fb-glow-bar"></div>
+
+    <!-- Navbar (replaces Sidebar) -->
+    <nav class="fb-navbar">
+        <!-- Brand (Logo Only) -->
+        <div class="fb-navbar-brand">
+            <img src="assets/logo-faceboost.png" alt="FaceBoost" onerror="this.src='assets/icon.png'">
+        </div>
+
+        <!-- Mobile Menu Toggle -->
+        <button class="fb-mobile-toggle" id="mobileMenuToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <!-- Navigation Tabs -->
+        <div class="fb-nav-tabs" id="navTabs">
+            <a href="#" class="fb-nav-tab active" data-tab="groups">
+                <i class="fas fa-users"></i>
+                <span>Groups</span>
+            </a>
+            <a href="#" class="fb-nav-tab" data-tab="marketplace">
+                <i class="fas fa-store"></i>
+                <span>Marketplace</span>
+            </a>
+            <a href="#" class="fb-nav-tab" data-tab="comment">
+                <i class="fas fa-comment-dots"></i>
+                <span>Auto Comment</span>
+            </a>
+            <a href="#" class="fb-nav-tab" data-tab="feed-engagement">
+                <i class="fas fa-fire"></i>
+                <span>Feed Engagement</span>
+            </a>
+            <a href="#" class="fb-nav-tab" data-tab="share">
+                <i class="fas fa-share-alt"></i>
+                <span>Auto Share</span>
+            </a>
+            <a href="#" class="fb-nav-tab" data-tab="auto-join">
+                <i class="fas fa-user-plus"></i>
+                <span>Auto Join</span>
+            </a>
+            <a href="#" class="fb-nav-tab" data-tab="settings">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </a>
+        </div>
+
+        <!-- Account Info -->
+        <div class="fb-navbar-account">
+            <div class="fb-account-avatar" id="accountAvatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="fb-account-info">
+                <span class="fb-account-name" id="accountName">Loading...</span>
+                <span class="fb-account-email" id="accountEmail">Loading...</span>
+            </div>
+            <button class="fb-account-btn" id="openBrowserBtn" title="Open Browser">
+                <i class="fas fa-external-link-alt"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="fb-main">
+        <div class="fb-content">
+            <!-- Tab 1: Groups -->
+            <div id="groups-tab" class="fb-tab-content active">
+                <div class="fb-page-header">
+                    <h1 class="fb-page-title">Post to Groups</h1>
+                    <p class="fb-page-subtitle">Automatically post to all Facebook groups you follow</p>
+                </div>
+
+                <!-- Facebook Login Prompt -->
+                <div class="fb-login-prompt" id="fbLoginPromptGroups">
+                    <div class="fb-login-prompt-info">
+                        <div class="fb-login-prompt-icon">
+                            <i class="fab fa-facebook-f"></i>
+                        </div>
+                        <div class="fb-login-prompt-text">
+                            <strong>Not logged in to Facebook?</strong>
+                            Click the button to open browser and login to your Facebook account
+                        </div>
+                    </div>
+                    <button class="fb-login-btn" id="fbLoginBtnGroups">
+                        <i class="fas fa-external-link-alt"></i>
+                        Login to Facebook
+                    </button>
+                </div>
+
+                <div class="fb-card">
+                    <h3 class="fb-card-title"><i class="fas fa-edit"></i> Post Content</h3>
+
+                    <div class="fb-form-group">
+                        <label class="fb-label" for="groupsPostText">
+                            <i class="fas fa-align-left"></i> Text for Groups
+                        </label>
+                        <textarea class="fb-textarea" id="groupsPostText" placeholder="Post text for all groups..."
+                            rows="4"></textarea>
+                        <div class="fb-hint">
+                            <i class="fas fa-info-circle"></i>
+                            <span><strong>Spin Text:</strong> Use {{option1|option2}} to create unique variations for
+                                each group.</span>
+                        </div>
+                    </div>
+
+                    <div class="fb-form-group">
+                        <label class="fb-label">
+                            <i class="fas fa-paperclip"></i> File Attachment (Optional - Max 10 Files)
+                        </label>
+                        <button class="fb-btn fb-btn-file" id="selectGroupsFileBtn">
+                            <i class="fas fa-folder-open"></i> Select Files (Max 10)
+                        </button>
+                        <div class="fb-file-info" id="groupsFileInfo" style="display: none;">
+                            <div class="fb-file-details">
+                                <span class="fb-file-name" id="groupsFileName">No file selected</span>
+                                <span class="fb-file-count" id="groupsFileCount"></span>
+                            </div>
+                            <button class="fb-btn fb-btn-danger" id="clearGroupsFileBtn" style="padding: 8px 15px;">
+                                <i class="fas fa-trash"></i> Remove
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="fb-form-group">
+                        <label class="fb-label" for="groupsDelayMin">
+                            <i class="fas fa-clock"></i> Delay Interval Between Groups
+                        </label>
+                        <div class="fb-input-range">
+                            <div class="fb-input-with-unit">
+                                <input type="number" class="fb-input" id="groupsDelayMin" min="1" max="300" value="90"
+                                    placeholder="90">
+                                <span class="unit">seconds</span>
+                            </div>
+                            <span class="fb-range-separator">-</span>
+                            <div class="fb-input-with-unit">
+                                <input type="number" class="fb-input" id="groupsDelayMax" min="1" max="600" value="300"
+                                    placeholder="300">
+                                <span class="unit">seconds</span>
+                            </div>
+                        </div>
+                        <div class="fb-hint">Random delay between minimum and maximum values (default: 90-300 seconds)
+                        </div>
+                    </div>
+
+                    <div class="fb-form-group">
+                        <label class="fb-label">
+                            <i class="fas fa-bed"></i> Rest Time (Take a break after posting)
+                        </label>
+                        <div class="fb-form-row">
+                            <div class="fb-form-group">
+                                <label class="fb-label" style="font-size: 0.8rem;">After every</label>
+                                <div class="fb-input-with-unit">
+                                    <input type="number" class="fb-input" id="groupsRestCount" min="1" max="100"
+                                        value="5" placeholder="5">
+                                    <span class="unit">posts</span>
+                                </div>
+                            </div>
+                            <div class="fb-form-group">
+                                <label class="fb-label" style="font-size: 0.8rem;">Rest for</label>
+                                <div class="fb-input-with-unit">
+                                    <input type="number" class="fb-input" id="groupsRestDelay" min="60" max="3600"
+                                        value="300" placeholder="300">
+                                    <span class="unit">seconds</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fb-btn-group">
+                        <button class="fb-btn fb-btn-primary" id="postToGroupsBtn">
+                            <i class="fas fa-users"></i> Post to All My Groups
+                            <span class="loading" id="loadingSpinnerGroups">⏳</span>
+                        </button>
+                        <button class="fb-btn fb-btn-danger" id="stopGroupsBtn" style="display: none;">
+                            <i class="fas fa-stop"></i> Stop Posting
+                        </button>
+                    </div>
+
+                    <div class="fb-feature-info">
+                        <i class="fab fa-facebook"></i>
+                        Automatically post to all your Facebook groups at once (first login takes 2 minutes)<br>
+                        <em>Please use Facebook in English language for best results</em>
+                    </div>
+                </div>
+
+                <!-- Saved Groups Section -->
+                <div class="fb-card">
+                    <div class="fb-section-header">
+                        <h3 class="fb-section-title"><i class="fas fa-save"></i> Saved Groups</h3>
+                        <div class="fb-section-stats">
+                            <span id="groupsCount">0</span>
+                            <span id="groupsCountText">groups saved</span>
+                        </div>
+                    </div>
+
+                    <div class="fb-controls">
+                        <button class="fb-btn fb-btn-success" id="extractGroupsBtn">
+                            <i class="fas fa-search"></i> Extract Groups
+                            <span class="loading" id="loadingExtract">⏳</span>
+                        </button>
+                        <button class="fb-btn fb-btn-secondary" id="selectAllSavedGroupsBtn">
+                            <i class="fas fa-check-square"></i> Select All
+                        </button>
+                        <button class="fb-btn fb-btn-secondary" id="deselectAllSavedGroupsBtn">
+                            <i class="fas fa-square"></i> Deselect All
+                        </button>
+                        <button class="fb-btn fb-btn-danger" id="clearSavedGroupsBtn">
+                            <i class="fas fa-trash"></i> Clear Groups
+                        </button>
+                    </div>
+
+                    <div class="fb-controls">
+                        <button class="fb-btn fb-btn-secondary" id="exportSavedGroupsBtn">
+                            <i class="fas fa-download"></i> Export Groups
+                        </button>
+                        <button class="fb-btn fb-btn-secondary" id="importSavedGroupsBtn">
+                            <i class="fas fa-upload"></i> Import Groups
+                        </button>
+                        <input type="file" id="importSavedGroupsFile" accept=".csv" style="display: none;">
+                    </div>
+                    <div id="savedGroupsImportExportInfo" style="display: none;">
+                        <span id="savedGroupsImportExportMessage"></span>
+                    </div>
+
+                    <div class="fb-search-container"
+                        style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; flex: 1; min-width: 200px; position: relative;">
+                            <i class="fas fa-search fb-search-icon"></i>
+                            <input type="text" class="fb-search-input" id="savedGroupsSearchInput"
+                                placeholder="Search groups by name or ID...">
+                            <button class="fb-search-clear" id="savedGroupsSearchClear">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="fb-filter-item">
+                            <label><i class="fas fa-calendar-alt"></i> Filter Date</label>
+                            <select class="fb-filter-select" id="savedGroupsDateFilter">
+                                <option value="all">All Dates</option>
+                                <option value="today">Today</option>
+                                <option value="week">This Week</option>
+                                <option value="month">This Month</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="savedGroupsSearchInfo" style="display: none;">
+                        <span id="savedGroupsFilteredCount">0</span> groups found
+                    </div>
+
+                    <div id="noSavedGroups" class="fb-empty-state">
+                        <div class="fb-empty-icon">📭</div>
+                        <p>No groups saved yet</p>
+                        <small>Click "Extract Groups" to fetch group data from your Facebook</small>
+                    </div>
+
+                    <div id="savedGroupsList" class="fb-groups-grid" style="display: none;">
+                        <!-- Groups will be populated here -->
+                    </div>
+
+                    <div class="fb-section-stats" style="margin-top: 16px;">
+                        <span id="selectedGroupsCount">0</span> groups selected
+                    </div>
+                </div>
+
+                <div class="fb-progress-container" id="groupsProgressContainer">
+                    <div class="fb-progress-title">
+                        <span><i class="fas fa-chart-line"></i> Progress Posting to Groups</span>
+                        <span id="groupsProgressCount">0/0</span>
+                    </div>
+                    <div class="fb-progress-bar">
+                        <div class="fb-progress-fill" id="groupsProgressFill"></div>
+                    </div>
+                    <div class="fb-progress-text" id="groupsProgressText">Starting...</div>
+                    <div id="groupsList" style="margin-top: 15px;"></div>
+                </div>
+            </div>
+
+            <!-- Tab 2: Marketplace -->
+            <div id="marketplace-tab" class="fb-tab-content">
+                <div class="fb-page-header">
+                    <h1 class="fb-page-title">Facebook Marketplace</h1>
+                    <p class="fb-page-subtitle">Sell your products on Facebook Marketplace automatically</p>
+                </div>
+
+                <div class="fb-login-prompt" id="fbLoginPromptMarketplace">
+                    <div class="fb-login-prompt-info">
+                        <div class="fb-login-prompt-icon">
+                            <i class="fab fa-facebook-f"></i>
+                        </div>
+                        <div class="fb-login-prompt-text">
+                            <strong>Not logged in to Facebook?</strong>
+                            Click the button to open browser and login to your Facebook account
+                        </div>
+                    </div>
+                    <button class="fb-login-btn" id="fbLoginBtnMarketplace">
+                        <i class="fas fa-external-link-alt"></i>
+                        Login to Facebook
+                    </button>
+                </div>
+
+                <div id="marketplace-form">
+                    <div class="fb-card">
+                        <h3 class="fb-card-title"><i class="fas fa-plus-circle"></i> Add New Listing</h3>
+
+                        <!-- Listing Type Selector -->
+                        <div class="fb-form-group">
+                            <label class="fb-label">
+                                <i class="fas fa-store"></i> Listing Type *
+                            </label>
+                            <div class="fb-listing-types">
+                                <label class="fb-listing-type active" data-type="item">
+                                    <input type="radio" name="listingType" value="item" checked>
+                                    <div class="fb-listing-type-icon">🛍️</div>
+                                    <div class="fb-listing-type-label">Item</div>
+                                    <div class="fb-listing-type-desc">Sell products</div>
+                                </label>
+                                <label class="fb-listing-type" data-type="vehicle">
+                                    <input type="radio" name="listingType" value="vehicle">
+                                    <div class="fb-listing-type-icon">🚗</div>
+                                    <div class="fb-listing-type-label">Vehicle</div>
+                                    <div class="fb-listing-type-desc">Sell cars, motorcycles</div>
+                                </label>
+                                <label class="fb-listing-type" data-type="property">
+                                    <input type="radio" name="listingType" value="property">
+                                    <div class="fb-listing-type-icon">🏠</div>
+                                    <div class="fb-listing-type-label">Property</div>
+                                    <div class="fb-listing-type-desc">Rent/Sell property</div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- ==================== ITEM FORM ==================== -->
+                        <div id="itemFormFields" class="listing-form-fields">
+                            <div class="form-group">
+                                <label for="productName">
+                                    <i class="fas fa-tag"></i> Product Name *
+                                </label>
+                                <input type="text" id="productName" placeholder="Example: iPhone 13 Pro Max 256GB">
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="productPrice">
+                                        <i class="fas fa-money-bill-wave"></i> Price *
+                                    </label>
+                                    <input type="number" id="productPrice" placeholder="1000000" min="0">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="productCategory">
+                                        <i class="fas fa-list"></i> Category *
+                                    </label>
+                                    <select id="productCategory">
+                                        <option value="">Select Category</option>
+                                        <option value="Tools">Tools</option>
+                                        <option value="Furniture">Furniture</option>
+                                        <option value="Household">Household</option>
+                                        <option value="Garden">Garden</option>
+                                        <option value="Appliances">Appliances</option>
+                                        <option value="Video">Video</option>
+                                        <option value="Games">Games</option>
+                                        <option value="Books Movies & Music">Books Movies & Music</option>
+                                        <option value="Bags & Luggage">Bags & Luggage</option>
+                                        <option value="Women's clothing & shoes">Women's clothing & shoes</option>
+                                        <option value="Men's clothing & shoes">Men's clothing & shoes</option>
+                                        <option value="Jewelry & Accessories">Jewelry & Accessories</option>
+                                        <option value="Health & beauty">Health & beauty</option>
+                                        <option value="Pet Supplies">Pet Supplies</option>
+                                        <option value="Baby & kids">Baby & kids</option>
+                                        <option value="Toys & Games">Toys & Games</option>
+                                        <option value="Electronics & computers">Electronics & computers</option>
+                                        <option value="Mobile phones">Mobile phones</option>
+                                        <option value="Bicycles">Bicycles</option>
+                                        <option value="Arts & Crafts">Arts & Crafts</option>
+                                        <option value="Sports & Outdoors">Sports & Outdoors</option>
+                                        <option value="Auto parts">Auto parts</option>
+                                        <option value="Musical Instruments">Musical Instruments</option>
+                                        <option value="Antiques & Collectibles">Antiques & Collectibles</option>
+                                        <option value="Garage Sale">Garage Sale</option>
+                                        <option value="Miscellaneous">Miscellaneous</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="productLocation">
+                                        <i class="fas fa-map-marker-alt"></i> Location *
+                                    </label>
+                                    <input type="text" id="productLocation" placeholder="Example: South Jakarta">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="productCondition">
+                                        <i class="fas fa-star"></i> Condition *
+                                    </label>
+                                    <select id="productCondition">
+                                        <option value="">Select Condition</option>
+                                        <option value="New">New</option>
+                                        <option value="Used - Like New">Used - Like New</option>
+                                        <option value="Used - Good">Used - Good</option>
+                                        <option value="Used - Fair">Used - Fair</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="productDescription">
+                                    <i class="fas fa-file-alt"></i> Description *
+                                </label>
+                                <textarea id="productDescription" placeholder="Detailed product description..."
+                                    rows="4"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ==================== VEHICLE FORM ==================== -->
+                    <div id="vehicleFormFields" class="listing-form-fields" style="display: none;">
+                        <!-- Vehicle Type - Hidden, default to "Other" -->
+                        <input type="hidden" id="vehicleType" value="Other">
+
+                        <div class="form-group">
+                            <label for="vehicleLocation">
+                                <i class="fas fa-map-marker-alt"></i> Location *
+                            </label>
+                            <input type="text" id="vehicleLocation" placeholder="Example: Jakarta">
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="vehicleYear">
+                                    <i class="fas fa-calendar"></i> Year *
+                                </label>
+                                <input type="number" id="vehicleYear" placeholder="2023" min="1900" max="2030">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="vehicleMake">
+                                    <i class="fas fa-industry"></i> Make *
+                                </label>
+                                <input type="text" id="vehicleMake" placeholder="Example: Toyota, Honda, Suzuki">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="vehicleModel">
+                                    <i class="fas fa-car-side"></i> Model (Title) *
+                                </label>
+                                <input type="text" id="vehicleModel" placeholder="Example: Civic Type R">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="vehiclePrice">
+                                    <i class="fas fa-money-bill-wave"></i> Price
+                                </label>
+                                <input type="number" id="vehiclePrice" placeholder="350000000" min="0">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="vehicleDescription">
+                                <i class="fas fa-file-alt"></i> Description *
+                            </label>
+                            <textarea id="vehicleDescription" placeholder="Detailed vehicle description..."
+                                rows="4"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- ==================== PROPERTY FORM ==================== -->
+                    <div id="propertyFormFields" class="listing-form-fields" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="propertySaleType">
+                                    <i class="fas fa-home"></i> Listing For *
+                                </label>
+                                <select id="propertySaleType">
+                                    <option value="">Select Type</option>
+                                    <option value="For Sale">For Sale</option>
+                                    <option value="For Rent">For Rent</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="propertyType">
+                                    <i class="fas fa-building"></i> Property Type *
+                                </label>
+                                <select id="propertyType">
+                                    <option value="">Select Property Type</option>
+                                    <option value="House">House</option>
+                                    <option value="Townhouse">Townhouse</option>
+                                    <option value="Apartment/condo">Apartment/condo</option>
+                                    <option value="Room only">Room only</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="propertyBedrooms">
+                                    <i class="fas fa-bed"></i> Number of Bedrooms *
+                                </label>
+                                <input type="number" id="propertyBedrooms" placeholder="3" min="0" max="20">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="propertyBathrooms">
+                                    <i class="fas fa-bath"></i> Number of Bathrooms *
+                                </label>
+                                <input type="number" id="propertyBathrooms" placeholder="2" min="0" max="20">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="propertyPrice">
+                                    <i class="fas fa-money-bill-wave"></i> Price*
+                                </label>
+                                <input type="number" id="propertyPrice" placeholder="2500000000" min="0">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="propertySquareMeters">
+                                    <i class="fas fa-ruler-combined"></i> Square Meters *
+                                </label>
+                                <input type="number" id="propertySquareMeters" placeholder="150" min="0">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="propertyLocation">
+                                <i class="fas fa-map-marker-alt"></i> Location *
+                            </label>
+                            <input type="text" id="propertyLocation" placeholder="Example: Menteng, Jakarta Pusat">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="propertyDescription">
+                                <i class="fas fa-file-alt"></i> Property Description *
+                            </label>
+                            <textarea id="propertyDescription" placeholder="Detailed property description..."
+                                rows="4"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- ==================== COMMON FIELDS (Images, Delay, Rest Time) ==================== -->
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-images"></i> Upload Images (Max 10) *
+                        </label>
+                        <button class="btn btn-file" id="selectProductImagesBtn">
+                            <i class="fas fa-camera"></i> Select Images
+                        </button>
+                        <div class="file-info" id="productImagesInfo" style="display: none;">
+                            <span id="productImagesCount">0 files selected</span>
+                            <button class="btn btn-danger" id="clearProductImagesBtn" style="padding: 8px 15px;">
+                                <i class="fas fa-trash"></i> Remove All
+                            </button>
+                        </div>
+                        <div class="product-images" id="productImagesPreview"></div>
+                        <small style="color: #94a3b8; display: block; margin-top: 5px;">
+                            <i class="fas fa-info-circle"></i> Image order will be maintained as uploaded
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="marketplaceDelayMin">
+                            <i class="fas fa-clock"></i> Delay Interval Between Listings
+                        </label>
+                        <div class="input-range">
+                            <div class="input-with-unit">
+                                <input type="number" id="marketplaceDelayMin" min="1" max="300" value="90"
+                                    placeholder="90">
+                                <span class="unit">seconds</span>
+                            </div>
+                            <span class="range-separator">-</span>
+                            <div class="input-with-unit">
+                                <input type="number" id="marketplaceDelayMax" min="1" max="600" value="300"
+                                    placeholder="300">
+                                <span class="unit">seconds</span>
+                            </div>
+                        </div>
+                        <small class="form-hint">Random delay between minimum and maximum values (default:
+                            90-300
+                            seconds)</small>
+                    </div>
+
+                    <!-- Rest Time Feature -->
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-bed"></i> Rest Time (Take a break after posting)
+                        </label>
+                        <div class="form-row">
+                            <div class="input-with-unit" style="flex: 1;">
+                                <label for="marketRestCount"
+                                    style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 5px; display: block;">After
+                                    every</label>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <input type="number" id="marketRestCount" min="1" max="100" value="5"
+                                        placeholder="5">
+                                    <span style="color: #94a3b8;">posts</span>
+                                </div>
+                            </div>
+                            <div class="input-with-unit" style="flex: 1;">
+                                <label for="marketRestDelay"
+                                    style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 5px; display: block;">Rest
+                                    for</label>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <input type="number" id="marketRestDelay" min="60" max="3600" value="300"
+                                        placeholder="300">
+                                    <span style="color: #94a3b8;">seconds</span>
+                                </div>
+                            </div>
+                        </div>
+                        <small class="form-hint" style="margin-top: 10px; display: block;">
+                            <i class="fas fa-info-circle"></i> After every N posts, the tool will rest for X
+                            seconds (default: every 5 posts, rest 300 seconds/5 minutes)
+                        </small>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn btn-warning" id="saveProductBtn">
+                            <i class="fas fa-save"></i> Save Listing
+                        </button>
+                        <button class="btn btn-secondary" id="clearFormBtn">
+                            <i class="fas fa-broom"></i> Clear Form
+                        </button>
+                    </div>
+                </div>
+
+                <!-- List Produk Tersimpan -->
+                <div id="saved-products" style="display: none; margin-top: 30px;">
+                    <div class="form-card">
+                        <h3
+                            style="margin-bottom: 20px; color: #e2e8f0; border-bottom: 2px solid rgba(148, 163, 184, 0.2); padding-bottom: 10px;">
+                            <i class="fas fa-boxes"></i> Saved Products
+                        </h3>
+
+                        <!-- Products Table -->
+                        <div class="products-table-container" id="productsTableContainer">
+                            <table class="products-table" id="productsTable">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 50px;"><input type="checkbox" id="selectAllProducts"
+                                                onchange="selectAllProducts(this.checked)"></th>
+                                        <th style="width: 80px;">Image</th>
+                                        <th style="width: 90px;">Type</th>
+                                        <th>Name</th>
+                                        <th>Price</th>
+                                        <th>Category/Details</th>
+                                        <th>Location</th>
+                                        <th>Status</th>
+                                        <th style="width: 120px;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="productsTableBody">
+                                    <!-- Products will be inserted here -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="btn-group" style="margin-top: 20px;">
+                            <button class="btn btn-warning" id="postSelectedProductsBtn" data-mode="start">
+                                <i class="fas fa-rocket"></i> Create Marketplace Listings
+                            </button>
+                            <button class="btn btn-danger" id="stopMarketplaceBtn" style="display: none;">
+                                <i class="fas fa-stop"></i> Stop Posting
+                            </button>
+                        </div>
+                        <div class="feature-info">
+                            <small class="text-muted">
+                                <i class="fab fa-facebook"></i>
+                                Create and manage Facebook Marketplace listings automatically<br>
+                                <em>Please use Facebook in English language for best results (first login takes
+                                    2 minutes)</em>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="progress-container" id="marketplaceProgressContainer">
+                    <div class="progress-title">
+                        <span><i class="fas fa-chart-line"></i> Marketplace Posting Progress</span>
+                        <span id="marketplaceProgressCount">0/0</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="marketplaceProgressFill"></div>
+                    </div>
+                    <div class="progress-text" id="marketplaceProgressText">Starting...</div>
+                    <div class="products-list" id="marketplaceList" style="margin-top: 15px;"></div>
+                </div>
+            </div>
+
+            <!-- Tab 3: Auto Comment -->
+            <div id="comment-tab" class="fb-tab-content">
+                <div class="fb-page-header">
+                    <h1 class="fb-page-title">Auto Comment</h1>
+                    <p class="fb-page-subtitle">Automatically comment on Facebook posts</p>
+                </div>
+
+                <!-- Facebook Login Prompt -->
+                <div class="fb-login-prompt" id="fbLoginPromptComment">
+                    <div class="fb-login-prompt-info">
+                        <div class="fb-login-prompt-icon">
+                            <i class="fab fa-facebook-f"></i>
+                        </div>
+                        <div class="fb-login-prompt-text">
+                            <strong>Not logged in to Facebook?</strong>
+                            Click the button to open browser and login to your Facebook account
+                        </div>
+                    </div>
+                    <button class="fb-login-btn" id="fbLoginBtnComment">
+                        <i class="fas fa-external-link-alt"></i>
+                        Login to Facebook
+                    </button>
+                </div>
+
+                <div class="fb-card">
+                    <h3 class="fb-card-title"><i class="fas fa-link"></i> Post Links</h3>
+
+                    <!-- Link Input Section -->
+                    <div class="fb-form-group">
+                        <label class="fb-label" for="singleCommentLink">
+                            <i class="fas fa-plus-circle"></i> Add Post Link
+                        </label>
+                        <div style="display: flex; gap: 12px; margin-bottom: 10px;">
+                            <input type="url" id="singleCommentLink" class="fb-input"
+                                placeholder="https://www.facebook.com/share/p/..." style="flex: 1;">
+                            <button class="fb-btn fb-btn-secondary" id="addCommentLinkBtn">
+                                <i class="fas fa-plus"></i> Add Link
+                            </button>
+                        </div>
+                        <div class="fb-hint">
+                            <i class="fas fa-info-circle"></i> Enter Facebook post links one by one
+                        </div>
+                    </div>
+
+                    <div class="fb-form-group">
+                        <label class="fb-label">
+                            <i class="fas fa-file-csv"></i> Import CSV File Links (Optional)
+                        </label>
+                        <div class="csv-import-container">
+                            <div class="csv-buttons-group">
+                                <button class="btn btn-file" id="selectCommentLinksCsvBtn">
+                                    📄 Import CSV
+                                </button>
+                                <button class="btn btn-secondary" id="downloadCommentCsvTemplateBtn">
+                                    📥 CSV Template
+                                </button>
+                            </div>
+                            <div class="csv-file-info" id="commentLinksCsvInfo" style="display: none;">
+                                <span class="file-name" id="commentLinksCsvName">No CSV file selected</span>
+                                <button class="clear-btn" id="clearCommentLinksCsvBtn">
+                                    Remove
+                                </button>
+                            </div>
+                        </div>
+                        <small style="color: #94a3b8; display: block; margin-top: 5px;">CSV Format: First column
+                            contains post links</small>
+                    </div>
+
+                    <!-- Links Table -->
+                    <div class="form-group">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <label>List of Post Links</label>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn btn-clear" id="selectAllLinksBtn"
+                                    style="padding: 8px 15px; font-size: 0.9rem;">
+                                    ✅ Select All
+                                </button>
+                                <button class="btn btn-clear" id="removeSelectedLinksBtn"
+                                    style="padding: 8px 15px; font-size: 0.9rem;">
+                                    🗑️ Remove Selected
+                                </button>
+                                <button class="btn btn-clear" id="clearAllLinksBtn"
+                                    style="padding: 8px 15px; font-size: 0.9rem;">
+                                    🧹 Clear All
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="links-table-container">
+                            <table id="commentLinksTable">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 50px; text-align: center;">
+                                            <input type="checkbox" id="selectAllCheckbox">
+                                        </th>
+                                        <th>Post Link</th>
+                                        <th style="width: 140px; text-align: center;">Status</th>
+                                        <th style="width: 100px; text-align: center;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="commentLinksTableBody">
+                                    <tr id="noLinksRow">
+                                        <td colspan="4">
+                                            <div class="fb-empty-state">
+                                                <div class="fb-empty-icon"><i class="fas fa-link"></i></div>
+                                                <div class="fb-empty-title">No post links added yet</div>
+                                                <div class="fb-empty-text">Add links manually or import a CSV file to
+                                                    start commenting.</div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div id="linksCountInfo">
+                            <strong id="totalLinksCount">0</strong> post links,
+                            <strong id="selectedLinksCount">0</strong> selected
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="commentText">Comment Text *</label>
+                        <textarea id="commentText" placeholder="Enter comment to post on all links..."
+                            rows="4"></textarea>
+                        <small class="form-hint">
+                            <i class="fas fa-info-circle"></i> <strong>Spin Text:</strong> Use {{option1|option2}} to
+                            create unique variations for each comment.
+                            <br>Example: "{{Great|Awesome|Nice}} {{post|content|share}}!" will create different comments
+                            for each post.
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Comment File Attachment (Optional)</label>
+                        <button class="btn btn-file" id="selectCommentFileBtn">
+                            📎 Select File for Comment
+                        </button>
+                        <div class="file-info" id="commentFileInfo" style="display: none;">
+                            <span id="commentFileName">No file selected</span>
+                            <button class="btn btn-file" id="clearCommentFileBtn"
+                                style="background: #ff4d4d; padding: 5px 10px;">
+                                Remove
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="commentDelayMin">Delay Between Comments (seconds)</label>
+                        <div class="input-range">
+                            <div class="input-with-unit">
+                                <input type="number" id="commentDelayMin" min="1" max="300" value="90" placeholder="90">
+                                <span class="unit">seconds</span>
+                            </div>
+                            <span class="range-separator">-</span>
+                            <div class="input-with-unit">
+                                <input type="number" id="commentDelayMax" min="1" max="600" value="300"
+                                    placeholder="300">
+                                <span class="unit">seconds</span>
+                            </div>
+                        </div>
+                        <small class="form-hint" style="color: #94a3b8;">Random delay between minimum and maximum values
+                            (default: 90-300 seconds)</small>
+                    </div>
+
+                    <!-- Rest Time Feature -->
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-bed"></i> Rest Time (Take a break after commenting)
+                        </label>
+                        <div class="form-row">
+                            <div class="input-with-unit" style="flex: 1;">
+                                <label for="commentRestCount"
+                                    style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 5px; display: block;">After
+                                    every</label>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <input type="number" id="commentRestCount" min="1" max="100" value="5"
+                                        placeholder="5">
+                                    <span style="color: #94a3b8;">comments</span>
+                                </div>
+                            </div>
+                            <div class="input-with-unit" style="flex: 1;">
+                                <label for="commentRestDelay"
+                                    style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 5px; display: block;">Rest
+                                    for</label>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <input type="number" id="commentRestDelay" min="60" max="3600" value="300"
+                                        placeholder="300">
+                                    <span style="color: #94a3b8;">seconds</span>
+                                </div>
+                            </div>
+                        </div>
+                        <small class="form-hint" style="margin-top: 10px; display: block;">
+                            <i class="fas fa-info-circle"></i> After every N comments, the tool will rest for X seconds
+                            (default: every 5 comments, rest 300 seconds/5 minutes)
+                        </small>
+                    </div>
+
+                    <div class="buttons-grid">
+                        <button class="btn" id="startCommentBtn">
+                            <span>💬 Start Auto Comment</span>
+                            <span class="loading" id="loadingSpinnerComment">⏳</span>
+                        </button>
+
+                        <button class="btn btn-clear" id="stopCommentBtn" style="display: none;">
+                            <span>⏹️ Stop Commenting</span>
+                        </button>
+
+                        <button class="btn btn-clear" id="clearCommentSessionBtn" style="display: none;">
+                            🧹 Clear Session & Logout
+                        </button>
+                    </div>
+                    <div class="feature-info">
+                        <small class="text-muted">
+                            <i class="fab fa-facebook"></i>
+                            Automatically comment on Facebook posts and engage with your audience<br>
+                            <em>Please use Facebook in English language for best results (first login takes 2
+                                minutes)</em>
+                        </small>
+                    </div>
+
+                    <div class="progress-container" id="commentProgressContainer">
+                        <div class="progress-title">
+                            <span>Auto Comment Progress</span>
+                            <span id="commentProgressCount">0/0</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="commentProgressFill"></div>
+                        </div>
+                        <div class="progress-text" id="commentProgressText">Starting...</div>
+                        <div class="groups-list" id="commentList"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 4: Feed Engagement -->
+            <div id="feed-engagement-tab" class="fb-tab-content">
+                <div class="fb-page-header">
+                    <h1 class="fb-page-title">Feed Engagement</h1>
+                    <p class="fb-page-subtitle">Automatically like and comment on posts from your Facebook feed</p>
+                </div>
+
+                <!-- Facebook Login Prompt -->
+                <div class="fb-login-prompt" id="fbLoginPromptFeedEngagement">
+                    <div class="fb-login-prompt-info">
+                        <div class="fb-login-prompt-icon">
+                            <i class="fab fa-facebook-f"></i>
+                        </div>
+                        <div class="fb-login-prompt-text">
+                            <strong>Not logged in to Facebook?</strong>
+                            Click the button to open browser and login to your Facebook account
+                        </div>
+                    </div>
+                    <button class="fb-login-btn" id="fbLoginBtnFeedEngagement">
+                        <i class="fas fa-external-link-alt"></i>
+                        Login to Facebook
+                    </button>
+                </div>
+
+                <!-- Auto Like Settings Card -->
+                <div class="fb-card">
+                    <h3 class="fb-card-title"><i class="fas fa-heart"></i> Auto Like Settings</h3>
+
+                    <div class="fb-form-group">
+                        <div class="fb-toggle-row">
+                            <label class="fb-toggle">
+                                <input type="checkbox" id="enableAutoLike" checked>
+                                <span class="fb-toggle-slider"></span>
+                            </label>
+                            <span class="fb-toggle-label">Enable Auto Like</span>
+                        </div>
+                    </div>
+
+                    <div class="fb-form-group" id="autoLikeTargetGroup">
+                        <label class="fb-label" for="targetLikes">
+                            <i class="fas fa-bullseye"></i> Target Likes
+                        </label>
+                        <input type="number" id="targetLikes" class="fb-input" min="0" max="500" value="50"
+                            placeholder="50">
+                        <div class="fb-hint">Number of posts to like (0 = skip auto like)</div>
+                    </div>
+                </div>
+
+                <!-- Auto Comment Settings Card -->
+                <div class="fb-card">
+                    <h3 class="fb-card-title"><i class="fas fa-comment"></i> Auto Comment Settings</h3>
+
+                    <div class="fb-form-group">
+                        <div class="fb-toggle-row">
+                            <label class="fb-toggle">
+                                <input type="checkbox" id="enableAutoCommentFeed" checked>
+                                <span class="fb-toggle-slider"></span>
+                            </label>
+                            <span class="fb-toggle-label">Enable Auto Comment</span>
+                        </div>
+                    </div>
+
+                    <div class="fb-form-group" id="autoCommentTargetGroup">
+                        <label class="fb-label" for="targetComments">
+                            <i class="fas fa-bullseye"></i> Target Comments
+                        </label>
+                        <input type="number" id="targetComments" class="fb-input" min="0" max="200" value="30"
+                            placeholder="30">
+                        <div class="fb-hint">Number of posts to comment on (0 = skip auto comment)</div>
+                    </div>
+
+                    <!-- Comment Templates Section -->
+                    <div class="fb-form-group">
+                        <label class="fb-label">
+                            <i class="fas fa-list"></i> Comment Templates
+                            <span class="fb-label-hint">(Random selection)</span>
+                        </label>
+
+                        <!-- Add New Comment Template -->
+                        <div class="fb-template-input">
+                            <textarea id="newCommentTemplate" class="fb-textarea"
+                                placeholder="Enter comment template... Use {{option1|option2}} for spin text"
+                                rows="2"></textarea>
+                            <div class="fb-template-actions">
+                                <button class="fb-btn fb-btn-secondary" id="selectCommentTemplateImageBtn"
+                                    title="Add Image">
+                                    <i class="fas fa-image"></i>
+                                </button>
+                                <button class="fb-btn fb-btn-success" id="addCommentTemplateBtn" title="Add Template">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="fb-file-info" id="commentTemplateImageInfo" style="display: none;">
+                            <div class="fb-file-details">
+                                <span class="fb-file-name" id="commentTemplateImageName">No image</span>
+                            </div>
+                            <button class="fb-btn fb-btn-danger fb-btn-sm" id="clearCommentTemplateImageBtn">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+
+                        <!-- Comment Templates Table -->
+                        <div class="fb-table-container" style="max-height: 250px; overflow-y: auto; margin-top: 16px;">
+                            <table class="fb-table" id="commentTemplatesTable">
+                                <thead>
+                                    <tr>
+                                        <th>Comment Text</th>
+                                        <th style="width: 80px; text-align: center;">Image</th>
+                                        <th style="width: 80px; text-align: center;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="commentTemplatesTableBody">
+                                    <tr id="noTemplatesRow">
+                                        <td colspan="3"
+                                            style="text-align: center; padding: 40px; color: var(--fb-text-muted);">
+                                            📝 No comment templates added yet
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="templatesCountInfo" class="fb-count-badge" style="display: none;">
+                            <strong id="totalTemplatesCount">0</strong> comment templates saved
+                        </div>
+                        <div class="fb-hint" style="margin-top: 12px;">
+                            <i class="fas fa-info-circle"></i> <strong>Spin Text:</strong> Use {{option1|option2}}
+                            to create variations.
+                            Comments will be randomly selected for each post.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Delay & Rest Settings Card -->
+                <div class="fb-card">
+                    <h3 class="fb-card-title"><i class="fas fa-clock"></i> Delay & Rest Settings</h3>
+
+                    <div class="fb-form-group">
+                        <label class="fb-label" for="feedEngagementDelayMin">
+                            <i class="fas fa-hourglass-half"></i> Delay Between Actions
+                        </label>
+                        <div class="fb-form-row">
+                            <div class="fb-input-group">
+                                <input type="number" id="feedEngagementDelayMin" class="fb-input" min="5" max="300"
+                                    value="90" placeholder="90">
+                                <span class="fb-input-addon">sec</span>
+                            </div>
+                            <span class="fb-range-separator">to</span>
+                            <div class="fb-input-group">
+                                <input type="number" id="feedEngagementDelayMax" class="fb-input" min="10" max="600"
+                                    value="300" placeholder="300">
+                                <span class="fb-input-addon">sec</span>
+                            </div>
+                        </div>
+                        <div class="fb-hint">Random delay between each like/comment action (default: 90-300 seconds)
+                        </div>
+                    </div>
+
+                    <div class="fb-form-group">
+                        <label class="fb-label">
+                            <i class="fas fa-bed"></i> Rest Time (Take a break)
+                        </label>
+                        <div class="fb-form-row">
+                            <div class="fb-input-column">
+                                <span class="fb-input-label">After every</span>
+                                <div class="fb-input-group">
+                                    <input type="number" id="feedEngagementRestCount" class="fb-input" min="5" max="100"
+                                        value="10" placeholder="10">
+                                    <span class="fb-input-addon">actions</span>
+                                </div>
+                            </div>
+                            <div class="fb-input-column">
+                                <span class="fb-input-label">Rest for</span>
+                                <div class="fb-input-group">
+                                    <input type="number" id="feedEngagementRestDelay" class="fb-input" min="30"
+                                        max="600" value="120" placeholder="120">
+                                    <span class="fb-input-addon">sec</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="fb-hint">
+                            <i class="fas fa-info-circle"></i> After every N actions, take a break for X seconds
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Section -->
+                <div class="fb-progress-container" id="feedEngagementProgressContainer" style="display: none;">
+                    <div class="fb-progress-title">
+                        <span><i class="fas fa-chart-line"></i> Feed Engagement Progress</span>
+                    </div>
+
+                    <!-- Likes Progress -->
+                    <div class="fb-progress-item">
+                        <div class="fb-progress-header">
+                            <span class="fb-progress-label" style="color: #f87171;">❤️ Likes</span>
+                            <span class="fb-progress-count" id="feedLikesProgressCount">0/0</span>
+                        </div>
+                        <div class="fb-progress-bar">
+                            <div class="fb-progress-fill" id="feedLikesProgressFill"
+                                style="background: linear-gradient(90deg, #f87171, #ef4444);"></div>
+                        </div>
+                    </div>
+
+                    <!-- Comments Progress -->
+                    <div class="fb-progress-item">
+                        <div class="fb-progress-header">
+                            <span class="fb-progress-label" style="color: #60a5fa;">💬 Comments</span>
+                            <span class="fb-progress-count" id="feedCommentsProgressCount">0/0</span>
+                        </div>
+                        <div class="fb-progress-bar">
+                            <div class="fb-progress-fill" id="feedCommentsProgressFill"
+                                style="background: linear-gradient(90deg, #60a5fa, #3b82f6);"></div>
+                        </div>
+                    </div>
+
+                    <div class="fb-progress-text" id="feedEngagementProgressText">Ready to start...</div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="fb-btn-group" style="margin-top: 24px;">
+                    <button class="fb-btn fb-btn-primary fb-btn-lg" id="startFeedEngagementBtn">
+                        <i class="fas fa-fire"></i> Start Feed Engagement
+                        <span class="fb-loading" id="loadingSpinnerFeedEngagement">⏳</span>
+                    </button>
+                    <button class="fb-btn fb-btn-danger fb-btn-lg" id="stopFeedEngagementBtn" style="display: none;">
+                        <i class="fas fa-stop"></i> Stop
+                    </button>
+                </div>
+
+                <div class="fb-feature-info">
+                    <i class="fab fa-facebook"></i>
+                    Automatically engage with posts on your Facebook feed by liking and commenting<br>
+                    <em>The tool will scroll through your feed and interact with posts randomly</em>
+                </div>
+            </div>
+
+            <!-- Tab 5: Auto Share Group -->
+            <div id="share-tab" class="fb-tab-content">
+                <div class="fb-page-header">
+                    <h1 class="fb-page-title">Auto Share to Groups</h1>
+                    <p class="fb-page-subtitle">Share posts to multiple Facebook groups automatically</p>
+                </div>
+
+                <!-- Facebook Login Prompt -->
+                <div class="fb-login-prompt" id="fbLoginPromptShare">
+                    <div class="fb-login-prompt-info">
+                        <div class="fb-login-prompt-icon">
+                            <i class="fab fa-facebook-f"></i>
+                        </div>
+                        <div class="fb-login-prompt-text">
+                            <strong>Not logged in to Facebook?</strong>
+                            Click the button to open browser and login to your Facebook account
+                        </div>
+                    </div>
+                    <button class="fb-login-btn" id="fbLoginBtnShare">
+                        <i class="fas fa-external-link-alt"></i>
+                        Login to Facebook
+                    </button>
+                </div>
+
+                <!-- Share Configuration -->
+                <div class="fb-card">
+                    <h3 class="fb-card-title"><i class="fas fa-share-alt"></i> Share Configuration</h3>
+
+                    <div class="fb-form-group">
+                        <label class="fb-label" for="sharePostLink">
+                            <i class="fas fa-link"></i> Post Link to Share *
+                        </label>
+                        <input type="url" id="sharePostLink" class="fb-input"
+                            placeholder="https://www.facebook.com/share/p/..." required>
+                        <div class="fb-hint">Facebook post link you want to share</div>
+                    </div>
+
+                    <div class="fb-form-group">
+                        <label class="fb-label" for="shareCaption">
+                            <i class="fas fa-quote-left"></i> Share Caption (Optional)
+                        </label>
+                        <textarea id="shareCaption" class="fb-textarea"
+                            placeholder="Add caption for sharing this post..." rows="3"></textarea>
+                        <div class="fb-hint">
+                            <i class="fas fa-info-circle"></i> Caption will be added when sharing.
+                            <strong>Spin Text:</strong> Use {{option1|option2}} for variations.
+                        </div>
+                    </div>
+
+                    <div class="fb-form-row">
+                        <div class="fb-form-group">
+                            <label class="fb-label">Min Delay (sec)</label>
+                            <input type="number" id="shareDelayMin" class="fb-input" value="90" min="1" required>
+                        </div>
+                        <div class="fb-form-group">
+                            <label class="fb-label">Max Delay (sec)</label>
+                            <input type="number" id="shareDelayMax" class="fb-input" value="300" min="1" required>
+                        </div>
+                        <div class="fb-form-group">
+                            <label class="fb-label">Max Shares/Group</label>
+                            <input type="number" id="maxShares" class="fb-input" value="1" min="1" max="3">
+                        </div>
+                    </div>
+
+                    <!-- Rest Time Feature -->
+                    <div class="fb-form-group"
+                        style="background: rgba(16, 185, 129, 0.05); padding: 16px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.1);">
+                        <label class="fb-label" style="color: var(--fb-primary-dark); font-weight: 700;">
+                            <i class="fas fa-bed"></i> Auto Rest Settings
+                        </label>
+                        <div class="fb-form-row" style="margin-top: 12px;">
+                            <div class="fb-input-column" style="flex: 1;">
+                                <span
+                                    style="font-size: 0.8rem; color: var(--fb-text-secondary); display: block; margin-bottom: 4px;">After
+                                    every</span>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <input type="number" id="shareRestCount" class="fb-input" value="5" min="1"
+                                        style="width: 80px;">
+                                    <span style="font-size: 0.85rem; color: var(--fb-text-muted);">shares</span>
+                                </div>
+                            </div>
+                            <div class="fb-input-column" style="flex: 1;">
+                                <span
+                                    style="font-size: 0.8rem; color: var(--fb-text-secondary); display: block; margin-bottom: 4px;">Rest
+                                    duration</span>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <input type="number" id="shareRestDelay" class="fb-input" value="300" min="60"
+                                        style="width: 100px;">
+                                    <span style="font-size: 0.85rem; color: var(--fb-text-muted);">seconds</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="fb-hint" style="margin-top: 12px; color: var(--fb-primary-dark);">
+                            <i class="fas fa-info-circle"></i> Helps prevent account restrictions by taking breaks.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Groups List Section -->
+                <div id="groupsListSection" class="fb-card">
+                    <div class="fb-card-header" style="flex-direction: column; align-items: stretch; gap: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <h3 class="fb-card-title" style="margin: 0;">
+                                <i class="fas fa-users"></i> Groups for Sharing
+                                <span class="fb-badge" id="totalGroupsCount">0</span>
+                            </h3>
+                            <div class="fb-section-stats" style="font-size: 0.85rem; color: var(--fb-text-muted);">
+                                <span id="selectedGroupsCount">0</span> selected
+                            </div>
+                        </div>
+
+                        <!-- Action Toolbar -->
+                        <div
+                            style="display: flex; flex-wrap: wrap; gap: 8px; padding: 12px; background: rgba(0,0,0,0.02); border-radius: 12px; border: 1px solid var(--fb-border-light);">
+                            <button class="fb-btn fb-btn-secondary fb-btn-sm" id="selectAllGroupsBtn">
+                                <i class="fas fa-check-square"></i> Select All
+                            </button>
+                            <button class="fb-btn fb-btn-secondary fb-btn-sm" id="deselectAllGroupsBtn">
+                                <i class="fas fa-square"></i> Deselect All
+                            </button>
+                            <div style="width: 1px; height: 24px; background: var(--fb-border-light); margin: 0 4px;">
+                            </div>
+                            <button class="fb-btn fb-btn-secondary fb-btn-sm" id="exportShareGroupsBtn">
+                                <i class="fas fa-download"></i> Export
+                            </button>
+                            <button class="fb-btn fb-btn-secondary fb-btn-sm" id="importShareGroupsBtn">
+                                <i class="fas fa-upload"></i> Import
+                            </button>
+                            <input type="file" id="importShareGroupsFile" accept=".csv" style="display: none;">
+                            <div style="flex: 1;"></div>
+                            <button class="fb-btn fb-btn-danger fb-btn-sm" id="clearShareGroupsBtn">
+                                <i class="fas fa-trash"></i> Clear
+                            </button>
+                        </div>
+
+                        <!-- Search & Filter Row -->
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <div class="fb-search-wrapper" style="flex: 1; position: relative;">
+                                <i class="fas fa-search"
+                                    style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--fb-text-muted);"></i>
+                                <input type="text" id="shareGroupsSearchInput" placeholder="Search groups..."
+                                    style="width: 100%; padding: 10px 10px 10px 38px; border-radius: 8px; border: 1px solid var(--fb-border); background: white;">
+                            </div>
+                            <select id="shareGroupsDateFilter"
+                                style="padding: 10px; border-radius: 8px; border: 1px solid var(--fb-border); background: white; min-width: 140px;">
+                                <option value="all">All Dates</option>
+                                <option value="today">Today</option>
+                                <option value="week">This Week</option>
+                                <option value="month">This Month</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Groups List Container -->
+                    <div id="groupsListContent" class="groups-list-container" style="margin-top: 16px;">
+                        <div id="noGroupsMessage" class="fb-empty-state">
+                            <div class="fb-empty-icon">📭</div>
+                            <div class="fb-empty-title">No groups extracted yet</div>
+                            <div class="fb-empty-text">Go to the "Groups" tab and click "Extract Groups"</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div id="shareActions" class="fb-card" style="margin-top: 24px; padding: 24px;">
+                    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px;">
+                        <button class="fb-btn fb-btn-primary fb-btn-lg" id="startShareBtn"
+                            style="height: 56px; font-size: 1rem;">
+                            <i class="fas fa-link"></i> <span>Share to Selected Groups</span>
+                            <span class="fb-loading" id="loadingShare">⏳</span>
+                        </button>
+
+                        <button class="fb-btn fb-btn-danger fb-btn-lg" id="stopShareBtn"
+                            style="display: none; height: 56px;">
+                            <i class="fas fa-stop"></i> Stop
+                        </button>
+
+                        <button class="fb-btn fb-btn-secondary fb-btn-lg" id="clearShareSessionBtn"
+                            style="display: none; height: 56px;">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </div>
+                    <div class="fb-feature-info" style="margin-top: 16px;">
+                        <i class="fab fa-facebook"></i>
+                        Share Facebook posts simultaneously. <em>Use Facebook in English for best results.</em>
+                    </div>
+                </div>
+
+                <!-- Progress -->
+                <div class="progress-container" id="shareProgressContainer">
+                    <div class="progress-title">
+                        <span>Share to Groups Progress</span>
+                        <span id="shareProgressCount">0/0</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="shareProgressFill"></div>
+                    </div>
+                    <div class="progress-text" id="shareProgressText">Starting...</div>
+                    <div class="groups-list" id="shareList"></div>
+                </div>
+            </div>
+
+            <!-- Tab 6: Auto Join Group -->
+            <div id="auto-join-tab" class="fb-tab-content">
+                <div class="fb-page-header">
+                    <h1 class="fb-page-title">Auto Join Groups</h1>
+                    <p class="fb-page-subtitle">Automatically join Facebook groups based on keywords</p>
+                </div>
+
+                <!-- Facebook Login Prompt -->
+                <div class="fb-login-prompt" id="fbLoginPromptAutoJoin">
+                    <div class="fb-login-prompt-info">
+                        <div class="fb-login-prompt-icon">
+                            <i class="fab fa-facebook-f"></i>
+                        </div>
+                        <div class="fb-login-prompt-text">
+                            <strong>Not logged in to Facebook?</strong>
+                            Click the button to open browser and login to your Facebook account
+                        </div>
+                    </div>
+                    <button class="fb-login-btn" id="fbLoginBtnAutoJoin">
+                        <i class="fas fa-external-link-alt"></i>
+                        Login to Facebook
+                    </button>
+                </div>
+
+                <!-- Join Configuration Card -->
+                <div class="fb-card">
+                    <h3 class="fb-card-title"><i class="fas fa-user-plus"></i> Join Configuration</h3>
+
+                    <div class="fb-form-group">
+                        <label class="fb-label" for="joinKeyword">
+                            <i class="fas fa-search"></i> Group Search Keyword *
+                        </label>
+                        <input type="text" id="joinKeyword" class="fb-input"
+                            placeholder="Example: buy sell, technology, sports">
+                        <div class="fb-hint">
+                            <i class="fas fa-info-circle"></i> Enter keywords to search for groups to join.<br>
+                            <strong>Spin Text:</strong> Use {{option1|option2}} to search with different keywords.
+                        </div>
+                    </div>
+
+                    <div class="fb-form-group">
+                        <label class="fb-label" for="maxJoins">
+                            <i class="fas fa-hashtag"></i> Max Joins per Session
+                        </label>
+                        <input type="number" id="maxJoins" class="fb-input" value="10" min="1">
+                        <div class="fb-hint">How many groups to join per session</div>
+                    </div>
+
+                    <!-- Group Data Collection Button -->
+                    <div class="fb-btn-group">
+                        <button class="fb-btn fb-btn-secondary fb-btn-lg" id="collectGroupsBtn">
+                            <i class="fas fa-search"></i> Group Data Collection
+                            <span class="fb-loading" id="loadingCollect">⏳</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Collected Groups Table Card -->
+                <div class="fb-card" id="collectedGroupsContainer">
+                    <div class="fb-card-header">
+                        <h3 class="fb-card-title">
+                            <i class="fas fa-users"></i> Collected Groups
+                            <span class="fb-badge" id="collectedGroupsCount">0</span>
+                        </h3>
+                        <div class="fb-card-actions">
+                            <button class="fb-btn fb-btn-danger fb-btn-sm" id="clearCollectedGroups">
+                                <i class="fas fa-trash"></i> Clear All
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="fb-table-container" style="max-height: 350px; overflow-y: auto;">
+                        <table class="fb-table" id="collectedGroupsTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px;">
+                                        <input type="checkbox" id="selectAllCollectedGroups">
+                                    </th>
+                                    <th>Group Name</th>
+                                    <th>Group Link</th>
+                                    <th style="width: 120px;">Status</th>
+                                    <th style="width: 80px;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="collectedGroupsBody">
+                                <!-- Groups will be rendered here -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div id="noCollectedGroups" class="fb-empty-state">
+                        <div class="fb-empty-icon">📭</div>
+                        <div class="fb-empty-title">No groups collected yet</div>
+                        <div class="fb-empty-text">
+                            Enter a keyword and click "Group Data Collection" to fetch Facebook groups
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Delay Settings Card -->
+                <div class="fb-card">
+                    <h3 class="fb-card-title"><i class="fas fa-clock"></i> Delay Settings</h3>
+
+                    <div class="fb-form-row">
+                        <div class="fb-form-group">
+                            <label class="fb-label" for="joinDelayMin">
+                                <i class="fas fa-hourglass-start"></i> Minimum Delay
+                            </label>
+                            <div class="fb-input-group">
+                                <input type="number" id="joinDelayMin" class="fb-input" value="90" min="10" max="300">
+                                <span class="fb-input-addon">sec</span>
+                            </div>
+                            <div class="fb-hint">Minimum delay between joins (default: 90 seconds)</div>
+                        </div>
+
+                        <div class="fb-form-group">
+                            <label class="fb-label" for="joinDelayMax">
+                                <i class="fas fa-hourglass-end"></i> Maximum Delay
+                            </label>
+                            <div class="fb-input-group">
+                                <input type="number" id="joinDelayMax" class="fb-input" value="300" min="30" max="600">
+                                <span class="fb-input-addon">sec</span>
+                            </div>
+                            <div class="fb-hint">Maximum delay between joins (default: 300 seconds)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="fb-btn-group" style="margin-top: 24px;">
+                    <button class="fb-btn fb-btn-primary fb-btn-lg" id="startJoinBtn" disabled>
+                        🤝 Start Auto Join Groups
+                        <span class="fb-loading" id="loadingJoin">⏳</span>
+                    </button>
+                    <button class="fb-btn fb-btn-danger fb-btn-lg" id="stopJoinBtn" style="display: none;">
+                        <i class="fas fa-stop"></i> Stop Joining Groups
+                    </button>
+                </div>
+
+                <div class="fb-feature-info">
+                    <i class="fab fa-facebook"></i>
+                    Automatically join Facebook groups based on your criteria<br>
+                    <em>Please use Facebook in English language for best results (first login takes 2 minutes)</em>
+                </div>
+
+                <!-- Progress Section -->
+                <div class="fb-progress-container" id="joinProgressContainer" style="display: none;">
+                    <div class="fb-progress-title">
+                        <span><i class="fas fa-users"></i> Auto Join Groups Progress</span>
+                        <span class="fb-progress-count" id="joinProgressCount">0/0</span>
+                    </div>
+                    <div class="fb-progress-bar">
+                        <div class="fb-progress-fill" id="joinProgressFill"></div>
+                    </div>
+                    <div class="fb-progress-text" id="joinProgressText">Starting...</div>
+                    <div class="fb-groups-list" id="joinList"></div>
+                </div>
+
+                <!-- Summary -->
+                <div class="fb-status-container" id="joinSummaryContainer" style="display: none;">
+                    <div class="fb-status-title">📊 Auto Join Groups Summary</div>
+                    <div id="joinSummaryLog"></div>
+                </div>
+            </div>
+
+            <!-- Tab 7: Settings -->
+            <div id="settings-tab" class="fb-tab-content">
+                <div class="fb-page-header">
+                    <h1 class="fb-page-title">Settings</h1>
+                    <p class="fb-page-subtitle">Manage sessions and app settings</p>
+                </div>
+
+                <div class="fb-card">
+                    <h3 class="fb-card-title">
+                        <i class="fas fa-sign-out-alt"></i> Session Management
+                    </h3>
+
+                    <div class="fb-form-group">
+                        <div class="fb-hint" style="margin-bottom: 20px;">
+                            <i class="fas fa-info-circle"></i> Clear session to logout from Facebook account and start
+                            fresh
+                            login
+                        </div>
+
+                        <div class="fb-btn-group">
+                            <button class="fb-btn fb-btn-danger" id="clearSessionBtn">
+                                <i class="fas fa-sign-out-alt"></i> Clear Session & Logout
+                            </button>
+                            <button class="fb-btn fb-btn-warning" id="stopAllPostingBtn">
+                                <i class="fas fa-stop-circle"></i> Stop All Posting
+                            </button>
+                            <button class="fb-btn fb-btn-secondary" id="refreshStatsBtn">
+                                <i class="fas fa-sync"></i> Refresh Statistics
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-card">
+                        <h3 style="margin-bottom: 20px; color: #2c3e50;">
+                            <i class="fas fa-desktop"></i> Browser Settings
+                        </h3>
+
+                        <div style="margin-bottom: 20px;">
+                            <p style="color: #6c757d; margin-bottom: 15px;">
+                                <i class="fas fa-info-circle"></i> Configure browser window size for all posting
+                                operations
+                            </p>
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-window-maximize"></i> Default Browser Window Size
+                            </label>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="globalBrowserSize" value="half" checked>
+                                    <span class="radio-label">1/2 Screen (Default)</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="globalBrowserSize" value="quarter">
+                                    <span class="radio-label">1/4 Screen</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="globalBrowserSize" value="third">
+                                    <span class="radio-label">1/3 Screen</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="globalBrowserSize" value="full">
+                                    <span class="radio-label">Full Screen</span>
+                                </label>
+                            </div>
+                            <small class="form-hint">This setting applies to all posting operations (groups,
+                                marketplace, comments, etc.)</small>
+                        </div>
+                    </div>
+
+                    <!-- Debug Console - Bottom of Page (Visible on all tabs) -->
+                    <div class="debug-console-wrapper" id="debugConsoleWrapper">
+                        <div class="debug-console" id="debugConsole">
+                            <!-- Console Header -->
+                            <div class="debug-console-header" id="debugConsoleHeader">
+                                <div class="debug-console-title">
+                                    <div class="debug-console-indicator"></div>
+                                    <i class="fas fa-terminal"></i>
+                                    <span>Debug Console</span>
+                                    <span class="debug-console-badge" id="consoleLogCount">0 logs</span>
+                                </div>
+                                <div class="debug-console-actions">
+                                    <button class="debug-console-btn" id="autoscrollToggleBtn"
+                                        title="Toggle Auto-scroll">
+                                        <i class="fas fa-arrow-down"></i>
+                                    </button>
+                                    <button class="debug-console-btn" id="clearStatusLogBtn" title="Clear Console">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    <button class="debug-console-btn" id="toggleConsoleBtn" title="Toggle Console">
+                                        <i class="fas fa-chevron-down" id="toggleConsoleIcon"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- Console Body -->
+                            <div class="debug-console-body" id="debugConsoleBody">
+                                <div id="statusLog"></div>
+                                <div class="debug-console-empty" id="consoleEmptyState">
+                                    <i class="fas fa-code"></i>
+                                    <p>Console is empty. Activity logs will appear here.</p>
+                                </div>
+                            </div>
+                            <!-- Console Footer -->
+                            <div class="debug-console-footer">
+                                <span id="lastLogTime">Ready</span>
+                                <span class="debug-console-status">
+                                    <span class="status-dot"></span>
+                                    <span id="consoleStatusText">Idle</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div> <!-- fb-content -->
+    </main>
+
+    <!-- Login Check Script - Always require manual login -->
+    <script>
+        // Always require manual login - no auto-login
+        console.log('Controller loaded - login check bypassed for manual login requirement');
+
+        // ===== FACEBOOST NAVBAR TAB SWITCHING =====
+        document.addEventListener('DOMContentLoaded', function () {
+            // Tab switching for navbar
+            const navTabs = document.querySelectorAll('.fb-nav-tab');
+            const tabContents = document.querySelectorAll('.fb-tab-content');
+
+            console.log('[TAB SWITCH] Found', navTabs.length, 'nav tabs');
+            console.log('[TAB SWITCH] Found', tabContents.length, 'tab contents');
+
+            navTabs.forEach(tab => {
+                tab.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const targetTab = this.getAttribute('data-tab');
+                    console.log('[TAB SWITCH] Clicked tab:', targetTab);
+
+                    // Remove active class from all tabs
+                    navTabs.forEach(t => t.classList.remove('active'));
+                    // Add active class to clicked tab
+                    this.classList.add('active');
+
+                    // Hide all tab contents
+                    tabContents.forEach(content => {
+                        content.classList.remove('active');
+                    });
+
+                    // Show target tab content
+                    const targetContent = document.getElementById(targetTab + '-tab');
+                    if (targetContent) {
+                        targetContent.classList.add('active');
+                    }
+
+                    // Close mobile menu if open
+                    const navTabsContainer = document.getElementById('navTabs');
+                    if (navTabsContainer) {
+                        navTabsContainer.classList.remove('open');
+                    }
+                });
+            });
+
+            // Mobile menu toggle
+            const mobileToggle = document.getElementById('mobileMenuToggle');
+            const navTabsContainer = document.getElementById('navTabs');
+
+            if (mobileToggle && navTabsContainer) {
+                mobileToggle.addEventListener('click', function () {
+                    navTabsContainer.classList.toggle('open');
+                });
+            }
+
+            // ===== MARKETPLACE LISTING TYPE SWITCHING =====
+            const listingTypes = document.querySelectorAll('.fb-listing-type');
+            const itemFormFields = document.getElementById('itemFormFields');
+            const vehicleFormFields = document.getElementById('vehicleFormFields');
+            const propertyFormFields = document.getElementById('propertyFormFields');
+
+            console.log('[LISTING TYPE] Found', listingTypes.length, 'listing type options');
+            console.log('[LISTING TYPE] itemFormFields:', itemFormFields ? 'found' : 'not found');
+            console.log('[LISTING TYPE] vehicleFormFields:', vehicleFormFields ? 'found' : 'not found');
+            console.log('[LISTING TYPE] propertyFormFields:', propertyFormFields ? 'found' : 'not found');
+
+            listingTypes.forEach(listingType => {
+                listingType.addEventListener('click', function (e) {
+                    const type = this.getAttribute('data-type');
+                    console.log('[LISTING TYPE] Clicked:', type);
+
+                    // Remove active class from all listing types
+                    listingTypes.forEach(lt => lt.classList.remove('active'));
+                    // Add active class to clicked listing type
+                    this.classList.add('active');
+
+                    // Check the radio button
+                    const radio = this.querySelector('input[type="radio"]');
+                    if (radio) {
+                        radio.checked = true;
+                    }
+
+                    // Hide ALL form fields first
+                    if (itemFormFields) itemFormFields.style.display = 'none';
+                    if (vehicleFormFields) vehicleFormFields.style.display = 'none';
+                    if (propertyFormFields) propertyFormFields.style.display = 'none';
+
+                    // Show only the relevant form fields based on type
+                    if (type === 'item' && itemFormFields) {
+                        itemFormFields.style.display = 'block';
+                        console.log('[LISTING TYPE] Showing Item form');
+                    } else if (type === 'vehicle' && vehicleFormFields) {
+                        vehicleFormFields.style.display = 'block';
+                        console.log('[LISTING TYPE] Showing Vehicle form');
+                    } else if (type === 'property' && propertyFormFields) {
+                        propertyFormFields.style.display = 'block';
+                        console.log('[LISTING TYPE] Showing Property form');
+                    }
+
+                    console.log('[LISTING TYPE] Switched to:', type);
+                });
+            });
+        });
+
+        // ===== FACEBOOK LOGIN BUTTON HANDLERS =====
+        // Handler untuk semua tombol "Login to Facebook" di setiap tab
+        document.addEventListener('DOMContentLoaded', function () {
+            // Daftar semua tombol login Facebook
+            const loginButtons = [
+                { btnId: 'fbLoginBtnGroups', promptId: 'fbLoginPromptGroups' },
+                { btnId: 'fbLoginBtnMarketplace', promptId: 'fbLoginPromptMarketplace' },
+                { btnId: 'fbLoginBtnComment', promptId: 'fbLoginPromptComment' },
+                { btnId: 'fbLoginBtnFeedEngagement', promptId: 'fbLoginPromptFeedEngagement' },
+                { btnId: 'fbLoginBtnShare', promptId: 'fbLoginPromptShare' },
+                { btnId: 'fbLoginBtnAutoJoin', promptId: 'fbLoginPromptAutoJoin' }
+            ];
+
+            // Tambahkan event listener untuk setiap tombol
+            loginButtons.forEach(({ btnId, promptId }) => {
+                const btn = document.getElementById(btnId);
+                if (btn) {
+                    btn.addEventListener('click', async function () {
+                        try {
+                            // Update tombol untuk menampilkan loading state
+                            const originalHTML = btn.innerHTML;
+                            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Opening...';
+                            btn.disabled = true;
+
+                            // Dapatkan accountId dari currentAccountInfo (sama seperti extractGroups)
+                            const currentAccountInfo = window.electronAPI.getCurrentAccountInfo();
+                            const accountId = currentAccountInfo.accountId;
+
+                            if (!accountId) {
+                                // Tampilkan error jika tidak ada account
+                                if (window.Swal) {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'No Account Selected',
+                                        text: 'Please select an account first from the account manager.',
+                                        confirmButtonColor: '#ef4444'
+                                    });
+                                }
+                                btn.innerHTML = originalHTML;
+                                btn.disabled = false;
+                                return;
+                            }
+
+                            // Panggil API untuk membuka browser Facebook dengan accountId
+                            const result = await window.electronAPI.openFacebookLogin(accountId);
+
+                            // Setelah berhasil membuka browser
+                            if (result.success) {
+                                console.log('Facebook login browser opened successfully for account:', accountId);
+                                // Tampilkan notifikasi
+                                if (window.Swal) {
+                                    Swal.fire({
+                                        icon: 'info',
+                                        title: 'Browser Opened',
+                                        text: 'Please login to Facebook in the opened browser window. When you\'re done, simply close the browser window.',
+                                        confirmButtonColor: '#1877f2',
+                                        confirmButtonText: 'Got it!'
+                                    });
+                                }
+                            } else {
+                                console.error('Failed to open Facebook login browser:', result.error);
+                                // Tampilkan error
+                                if (window.Swal) {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: result.message || 'Failed to open browser. Please try again.',
+                                        confirmButtonColor: '#ef4444'
+                                    });
+                                }
+                            }
+
+                            // Kembalikan tombol ke state asli
+                            btn.innerHTML = originalHTML;
+                            btn.disabled = false;
+
+                        } catch (error) {
+                            console.error('Error opening Facebook login:', error);
+                            btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error';
+                            btn.disabled = false;
+
+                            if (window.Swal) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'An unexpected error occurred. Please try again.',
+                                    confirmButtonColor: '#ef4444'
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+
+            // Event listener untuk menangani ketika browser login ditutup
+            if (window.electronAPI && window.electronAPI.onFacebookLoginComplete) {
+                window.electronAPI.onFacebookLoginComplete((data) => {
+                    console.log('Facebook login window closed:', data);
+
+                    // Tampilkan notifikasi sukses
+                    if (window.Swal) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Login Completed',
+                            text: 'If you successfully logged in to Facebook, your session is now saved. You can proceed with posting.',
+                            confirmButtonColor: '#10b981',
+                            confirmButtonText: 'Great!'
+                        });
+                    }
+                });
+            }
+        });
+    </script>
+    <script src="renderer.js"></script>
+</body>
+
+</html>

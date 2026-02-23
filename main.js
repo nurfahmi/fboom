@@ -200,7 +200,7 @@ app.whenReady().then(() => {
     const acc = currentGroup.accounts[slot]
     if (!acc) return { ok: false, error: 'No account in this slot' }
     if (pages[slot] && pages[slot].view) {
-      try { browserWindow.removeBrowserView(pages[slot].view) } catch (e) {}
+      try { browserWindow.removeBrowserView(pages[slot].view) } catch (e) { }
     }
     pages[slot] = manager.createProfile(acc.id)
     layoutBrowsers()
@@ -242,7 +242,7 @@ app.whenReady().then(() => {
 
   ipcMain.handle('close-browser', async (e, slot) => {
     if (pages[slot] && pages[slot].view) {
-      try { browserWindow.removeBrowserView(pages[slot].view) } catch (e) {}
+      try { browserWindow.removeBrowserView(pages[slot].view) } catch (e) { }
       pages[slot] = null
     }
     layoutBrowsers()
@@ -257,6 +257,21 @@ app.whenReady().then(() => {
 
   ipcMain.handle('collapse-all', async () => {
     expandedSlot = -1
+    layoutBrowsers()
+    return { ok: true }
+  })
+
+  // Hide/show browser views (so modals can appear on top)
+  ipcMain.handle('hide-browser-views', () => {
+    for (let i = 0; i < SLOT_COUNT; i++) {
+      if (pages[i] && pages[i].view) {
+        pages[i].view.setBounds({ x: -9999, y: -9999, width: 1, height: 1 })
+      }
+    }
+    return { ok: true }
+  })
+
+  ipcMain.handle('show-browser-views', () => {
     layoutBrowsers()
     return { ok: true }
   })

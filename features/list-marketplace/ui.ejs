@@ -1,0 +1,407 @@
+<div class="bg-dark-300 rounded-lg p-3">
+    <h3 class="text-xs text-gray-500 uppercase tracking-wider mb-2">List Marketplace</h3>
+
+    <!-- Inner tabs -->
+    <div class="flex gap-1 mb-3">
+        <button onclick="switchMpTab('form')"
+            class="mp-tab px-3 py-1.5 rounded-md text-xs font-semibold transition bg-accent text-white"
+            data-mptab="form">Product Form</button>
+        <button onclick="switchMpTab('control')"
+            class="mp-tab px-3 py-1.5 rounded-md text-xs font-semibold transition bg-dark-100 text-gray-400 hover:text-white"
+            data-mptab="control">Control</button>
+        <button onclick="switchMpTab('saved')"
+            class="mp-tab px-3 py-1.5 rounded-md text-xs font-semibold transition bg-dark-100 text-gray-400 hover:text-white"
+            data-mptab="saved">Saved Products</button>
+    </div>
+
+    <!-- ====== TAB: PRODUCT FORM ====== -->
+    <div class="mp-panel" data-mppanel="form">
+
+        <!-- Listing type radio -->
+        <div class="mb-3">
+            <label class="block text-[11px] text-gray-500 mb-1">Listing Type</label>
+            <div class="flex gap-3">
+                <label class="flex items-center gap-1.5 text-xs text-gray-300 cursor-pointer">
+                    <input type="radio" name="mpListingType" value="item" checked
+                        onchange="switchMpFormType(this.value)" class="accent-blue-500"> 🛍️ Item
+                </label>
+                <label class="flex items-center gap-1.5 text-xs text-gray-300 cursor-pointer">
+                    <input type="radio" name="mpListingType" value="vehicle" onchange="switchMpFormType(this.value)"
+                        class="accent-blue-500"> 🚗 Vehicle
+                </label>
+                <label class="flex items-center gap-1.5 text-xs text-gray-300 cursor-pointer">
+                    <input type="radio" name="mpListingType" value="property" onchange="switchMpFormType(this.value)"
+                        class="accent-blue-500"> 🏠 Property
+                </label>
+            </div>
+        </div>
+
+        <!-- Images (shared across all types) -->
+        <div class="mb-3">
+            <label class="block text-[11px] text-gray-500 mb-1">Product Images</label>
+            <div class="flex gap-1.5 mb-1">
+                <button onclick="pickMpImages()"
+                    class="px-3 py-1.5 bg-dark-100 hover:bg-accent text-gray-300 hover:text-white rounded text-xs font-semibold transition">📷
+                    Pick Images</button>
+                <button onclick="clearMpImages()"
+                    class="px-2 py-1.5 bg-dark-100 hover:bg-red-600 text-gray-300 hover:text-white rounded text-xs font-semibold transition">✕
+                    Clear</button>
+                <span id="mpImageCount" class="text-[10px] text-gray-500 self-center">No images</span>
+            </div>
+        </div>
+
+        <!-- ===== ITEM FORM ===== -->
+        <div id="mpFormItem">
+            <div class="grid grid-cols-2 gap-2 mb-2">
+                <div>
+                    <label class="text-[10px] text-gray-600">Product Name *</label>
+                    <input type="text" id="mpItemName" placeholder="Product name"
+                        class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+                </div>
+                <div>
+                    <label class="text-[10px] text-gray-600">Price *</label>
+                    <input type="text" id="mpItemPrice" placeholder="e.g. 150000"
+                        class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2 mb-2">
+                <div>
+                    <label class="text-[10px] text-gray-600">Category *</label>
+                    <select id="mpItemCategory"
+                        class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+                        <option value="">Select category</option>
+                        <option value="Tools">Tools</option>
+                        <option value="Furniture">Furniture</option>
+                        <option value="Household">Household</option>
+                        <option value="Garden">Garden</option>
+                        <option value="Appliances">Appliances</option>
+                        <option value="Video Games">Video Games</option>
+                        <option value="Books Movies & Music">Books, Movies & Music</option>
+                        <option value="Bags & Luggage">Bags & Luggage</option>
+                        <option value="Women's clothing & shoes">Women's clothing & shoes</option>
+                        <option value="Men's clothing & shoes">Men's clothing & shoes</option>
+                        <option value="Jewelry & Accessories">Jewelry & Accessories</option>
+                        <option value="Health & beauty">Health & beauty</option>
+                        <option value="Pet Supplies">Pet Supplies</option>
+                        <option value="Baby & kids">Baby & kids</option>
+                        <option value="Toys & Games">Toys & Games</option>
+                        <option value="Electronics & computers">Electronics & computers</option>
+                        <option value="Mobile phones">Mobile phones</option>
+                        <option value="Bicycles">Bicycles</option>
+                        <option value="Arts & Crafts">Arts & Crafts</option>
+                        <option value="Sports & Outdoors">Sports & Outdoors</option>
+                        <option value="Auto parts">Auto parts</option>
+                        <option value="Musical Instruments">Musical Instruments</option>
+                        <option value="Antiques & Collectibles">Antiques & Collectibles</option>
+                        <option value="Garage Sale">Garage Sale</option>
+                        <option value="Miscellaneous">Miscellaneous</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[10px] text-gray-600">Condition *</label>
+                    <select id="mpItemCondition"
+                        class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+                        <option value="">Select condition</option>
+                        <option value="New">New</option>
+                        <option value="Used - Like New">Used - Like New</option>
+                        <option value="Used - Good">Used - Good</option>
+                        <option value="Used - Fair">Used - Fair</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mb-2">
+                <label class="text-[10px] text-gray-600">Location *</label>
+                <input type="text" id="mpItemLocation" placeholder="e.g. Jakarta"
+                    class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+            </div>
+            <div class="mb-2">
+                <label class="text-[10px] text-gray-600">Description *</label>
+                <textarea id="mpItemDescription" rows="2" placeholder="Product description..."
+                    class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent resize-none"></textarea>
+            </div>
+        </div>
+
+        <!-- ===== VEHICLE FORM ===== -->
+        <div id="mpFormVehicle" class="hidden">
+            <div class="grid grid-cols-2 gap-2 mb-2">
+                <div>
+                    <label class="text-[10px] text-gray-600">Vehicle Type</label>
+                    <select id="mpVehicleType"
+                        class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+                        <option value="Other">Other</option>
+                        <option value="Car/Truck">Car/Truck</option>
+                        <option value="Motorcycle">Motorcycle</option>
+                        <option value="Powersport">Powersport</option>
+                        <option value="RV/Camper">RV/Camper</option>
+                        <option value="Trailer">Trailer</option>
+                        <option value="Boat">Boat</option>
+                        <option value="Commercial & Industrial">Commercial & Industrial</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[10px] text-gray-600">Year *</label>
+                    <input type="text" id="mpVehicleYear" placeholder="e.g. 2020"
+                        class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2 mb-2">
+                <div>
+                    <label class="text-[10px] text-gray-600">Make *</label>
+                    <input type="text" id="mpVehicleMake" placeholder="e.g. Toyota"
+                        class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+                </div>
+                <div>
+                    <label class="text-[10px] text-gray-600">Model *</label>
+                    <input type="text" id="mpVehicleModel" placeholder="e.g. Avanza"
+                        class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2 mb-2">
+                <div>
+                    <label class="text-[10px] text-gray-600">Price *</label>
+                    <input type="text" id="mpVehiclePrice" placeholder="e.g. 200000000"
+                        class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+                </div>
+                <div>
+                    <label class="text-[10px] text-gray-600">Location *</label>
+                    <input type="text" id="mpVehicleLocation" placeholder="e.g. Jakarta"
+                        class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+                </div>
+            </div>
+            <div class="mb-2">
+                <label class="text-[10px] text-gray-600">Description *</label>
+                <textarea id="mpVehicleDescription" rows="2" placeholder="Vehicle description..."
+                    class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent resize-none"></textarea>
+            </div>
+        </div>
+
+        <!-- ===== PROPERTY FORM ===== -->
+        <div id="mpFormProperty" class="hidden">
+            <div class="grid grid-cols-2 gap-2 mb-2">
+                <div>
+                    <label class="text-[10px] text-gray-600">For Sale / Rent *</label>
+                    <select id="mpPropertySaleType"
+                        class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+                        <option value="Rent">For Rent</option>
+                        <option value="Sale">For Sale</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[10px] text-gray-600">Property Type *</label>
+                    <select id="mpPropertyType"
+                        class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+                        <option value="">Select type</option>
+                        <option value="Apartment">Apartment</option>
+                        <option value="House">House</option>
+                        <option value="Townhouse">Townhouse</option>
+                        <option value="Condo">Condo</option>
+                        <option value="Land">Land</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+            <div class="grid grid-cols-4 gap-2 mb-2">
+                <div>
+                    <label class="text-[10px] text-gray-600">Bedrooms</label>
+                    <input type="number" id="mpPropertyBedrooms" value="1" min="0"
+                        class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+                </div>
+                <div>
+                    <label class="text-[10px] text-gray-600">Bathrooms</label>
+                    <input type="number" id="mpPropertyBathrooms" value="1" min="0"
+                        class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+                </div>
+                <div>
+                    <label class="text-[10px] text-gray-600">Price *</label>
+                    <input type="text" id="mpPropertyPrice" placeholder="Price"
+                        class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+                </div>
+                <div>
+                    <label class="text-[10px] text-gray-600">Sq. Meters</label>
+                    <input type="text" id="mpPropertySqm" placeholder="m²"
+                        class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+                </div>
+            </div>
+            <div class="mb-2">
+                <label class="text-[10px] text-gray-600">Location *</label>
+                <input type="text" id="mpPropertyLocation" placeholder="e.g. Jakarta"
+                    class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+            </div>
+            <div class="mb-2">
+                <label class="text-[10px] text-gray-600">Description *</label>
+                <textarea id="mpPropertyDescription" rows="2" placeholder="Property description..."
+                    class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent resize-none"></textarea>
+            </div>
+        </div>
+
+        <!-- Save / Clear buttons -->
+        <div class="flex gap-1.5 mt-2">
+            <button onclick="saveMpProduct()"
+                class="flex-1 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-md text-xs font-bold transition">💾
+                Save Product</button>
+            <button onclick="clearMpForm()"
+                class="px-3 py-2 bg-dark-100 hover:bg-red-600 text-gray-300 hover:text-white rounded-md text-xs font-bold transition">✕
+                Clear</button>
+        </div>
+    </div>
+
+    <!-- ====== TAB: CONTROL ====== -->
+    <div class="mp-panel hidden" data-mppanel="control">
+        <div class="mb-3">
+            <label class="block text-[11px] text-gray-500 mb-1">Timing</label>
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="text-[10px] text-gray-600">Delay Min (sec)</label>
+                    <input type="number" id="mpDelayMin" value="15" min="1"
+                        class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+                </div>
+                <div>
+                    <label class="text-[10px] text-gray-600">Delay Max (sec)</label>
+                    <input type="number" id="mpDelayMax" value="60" min="1"
+                        class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+                </div>
+                <div>
+                    <label class="text-[10px] text-gray-600">Rest after N posts</label>
+                    <input type="number" id="mpRestAfter" value="5" min="0"
+                        class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+                </div>
+                <div>
+                    <label class="text-[10px] text-gray-600">Rest duration (sec)</label>
+                    <input type="number" id="mpRestSeconds" value="300" min="0"
+                        class="w-full px-2 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+                </div>
+            </div>
+        </div>
+
+        <div class="flex gap-1.5">
+            <button id="btnStartMp" onclick="startMarketplace()"
+                class="flex-1 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-md text-sm font-bold transition">▶
+                Start Listing</button>
+            <button id="btnStopMp" onclick="stopMarketplace()" disabled
+                class="flex-1 px-3 py-2 bg-red-700 hover:bg-red-600 text-white rounded-md text-sm font-bold transition disabled:opacity-40 disabled:cursor-not-allowed">⏹
+                Stop</button>
+        </div>
+    </div>
+
+    <!-- ====== TAB: SAVED PRODUCTS ====== -->
+    <div class="mp-panel hidden" data-mppanel="saved">
+        <!-- Action buttons -->
+        <div class="flex gap-1.5 mb-2 flex-wrap">
+            <button onclick="loadMpTxt()"
+                class="px-2 py-1.5 bg-dark-100 hover:bg-accent text-gray-300 hover:text-white rounded text-xs font-semibold transition">📂
+                Load TXT</button>
+            <button onclick="saveMpTxt()"
+                class="px-2 py-1.5 bg-dark-100 hover:bg-accent text-gray-300 hover:text-white rounded text-xs font-semibold transition">💾
+                Save TXT</button>
+            <button onclick="clearMpProducts()"
+                class="px-2 py-1.5 bg-dark-100 hover:bg-red-600 text-gray-300 hover:text-white rounded text-xs font-semibold transition">✕
+                Clear</button>
+            <button onclick="openGlobalMpModal()"
+                class="px-2 py-1.5 bg-blue-700 hover:bg-blue-600 text-white rounded text-xs font-semibold transition">🌐
+                Import from Global</button>
+        </div>
+
+        <!-- Filter -->
+        <div class="mb-2">
+            <input type="text" id="mpFilter" oninput="renderMpTable()" placeholder="🔍 Filter by name..."
+                class="w-full px-2.5 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+        </div>
+
+        <!-- Count -->
+        <div class="text-xs text-gray-500 mb-1">
+            Products: <span id="mpProductCount" class="text-emerald-400 font-bold">0</span>
+        </div>
+
+        <!-- Table -->
+        <div class="max-h-[250px] overflow-y-auto rounded border border-dark-100">
+            <table class="w-full text-xs">
+                <thead>
+                    <tr class="bg-dark-400 text-gray-500 uppercase sticky top-0">
+                        <th class="px-1.5 py-1 text-center w-6"><input type="checkbox" id="mpSelectAll"
+                                onchange="toggleMpSelectAll(this.checked)"></th>
+                        <th class="px-1.5 py-1 text-left w-6">No</th>
+                        <th class="px-1.5 py-1 text-left w-12">Type</th>
+                        <th class="px-1.5 py-1 text-left">Name</th>
+                        <th class="px-1.5 py-1 text-left w-16">Price</th>
+                        <th class="px-1.5 py-1 text-left w-20">Location</th>
+                        <th class="px-1.5 py-1 text-left w-14">Status</th>
+                        <th class="px-1.5 py-1 text-center w-12">Act</th>
+                    </tr>
+                </thead>
+                <tbody id="mpTableBody">
+                    <tr>
+                        <td colspan="8" class="px-2 py-3 text-center text-gray-600">No saved products. Use the Product
+                            Form to add listings.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ====== GLOBAL MARKETPLACE MODAL ====== -->
+<div id="mpGlobalModal" class="hidden fixed inset-0 z-50 flex items-center justify-center"
+    style="background:rgba(0,0,0,0.6)">
+    <div
+        class="bg-dark-300 rounded-xl shadow-2xl border border-dark-100 w-[520px] max-h-[80vh] flex flex-col overflow-hidden">
+        <!-- Header -->
+        <div class="flex items-center justify-between px-4 py-3 border-b border-dark-100">
+            <h3 class="text-sm font-bold text-white">🌐 Global Marketplace Products</h3>
+            <button onclick="closeGlobalMpModal()"
+                class="text-gray-400 hover:text-white text-lg leading-none">&times;</button>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="flex gap-1.5 px-4 pt-3 flex-wrap">
+            <button onclick="importGlobalMpTxt()"
+                class="px-2 py-1.5 bg-dark-100 hover:bg-accent text-gray-300 hover:text-white rounded text-xs font-semibold transition">📂
+                Import TXT</button>
+            <button onclick="exportGlobalMpTxt()"
+                class="px-2 py-1.5 bg-dark-100 hover:bg-accent text-gray-300 hover:text-white rounded text-xs font-semibold transition">💾
+                Export TXT</button>
+            <button onclick="clearGlobalMpProducts()"
+                class="px-2 py-1.5 bg-dark-100 hover:bg-red-600 text-gray-300 hover:text-white rounded text-xs font-semibold transition">✕
+                Clear</button>
+        </div>
+
+        <!-- Filter -->
+        <div class="px-4 pt-2">
+            <input type="text" id="mpGlobalFilter" oninput="renderGlobalMpTable()" placeholder="🔍 Filter by name..."
+                class="w-full px-2.5 py-1.5 bg-dark-100 border border-dark-300 rounded text-xs text-gray-200 outline-none focus:border-accent">
+        </div>
+
+        <!-- Count -->
+        <div class="text-xs text-gray-500 px-4 pt-1.5">
+            Global Products: <span id="mpGlobalCount" class="text-blue-400 font-bold">0</span>
+        </div>
+
+        <!-- Table -->
+        <div class="flex-1 overflow-y-auto px-4 pt-2 pb-3">
+            <div class="rounded border border-dark-100">
+                <table class="w-full text-xs">
+                    <thead>
+                        <tr class="bg-dark-400 text-gray-500 uppercase sticky top-0">
+                            <th class="px-1.5 py-1 text-left w-6">No</th>
+                            <th class="px-1.5 py-1 text-left w-12">Type</th>
+                            <th class="px-1.5 py-1 text-left">Name</th>
+                            <th class="px-1.5 py-1 text-left w-16">Price</th>
+                            <th class="px-1.5 py-1 text-left w-20">Location</th>
+                            <th class="px-1.5 py-1 text-center w-16">Act</th>
+                        </tr>
+                    </thead>
+                    <tbody id="mpGlobalTableBody">
+                        <tr>
+                            <td colspan="6" class="px-2 py-3 text-center text-gray-600">No global products.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="px-4 py-3 border-t border-dark-100 flex justify-end">
+            <button onclick="closeGlobalMpModal()"
+                class="px-4 py-2 bg-dark-100 hover:bg-dark-400 text-gray-300 hover:text-white rounded-md text-xs font-bold transition">Close</button>
+        </div>
+    </div>
+</div>

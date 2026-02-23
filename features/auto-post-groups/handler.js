@@ -28,11 +28,11 @@ module.exports = function (getPage) {
 
         for (let i = 0; i < groups.length; i++) {
             if (!state[slot] || !state[slot].running) break
-
             if (e.sender.isDestroyed()) break
+
             const group = groups[i]
             const groupUrl = `https://www.facebook.com/groups/${group.groupId}/buy_sell_discussion`
-            if (!e.sender.isDestroyed()) e.sender.send('post-groups-progress', slot, { index: i, status: 'processing', total: groups.length, groupName: group.name, successCount, failCount })
+            e.sender.send('post-groups-progress', slot, { index: i, status: 'processing', total: groups.length, groupName: group.name, successCount, failCount })
 
             try {
                 await page.goto(groupUrl)
@@ -43,31 +43,42 @@ module.exports = function (getPage) {
 
                 if (success) {
                     successCount++
-                    if (!e.sender.isDestroyed()) e.sender.send('post-groups-progress', slot, { index: i, status: 'success', total: groups.length, groupName: group.name, successCount, failCount })
+                    if (!e.sender.isDestroyed()) {
+                        e.sender.send('post-groups-progress', slot, { index: i, status: 'success', total: groups.length, groupName: group.name, successCount, failCount })
+                    }
                 } else {
                     failCount++
-                    if (!e.sender.isDestroyed()) e.sender.send('post-groups-progress', slot, { index: i, status: 'error', error: 'Failed to post', total: groups.length, groupName: group.name, successCount, failCount })
+                    if (!e.sender.isDestroyed()) {
+                        e.sender.send('post-groups-progress', slot, { index: i, status: 'error', error: 'Failed to post', total: groups.length, groupName: group.name, successCount, failCount })
+                    }
                 }
             } catch (err) {
                 failCount++
-                if (!e.sender.isDestroyed()) e.sender.send('post-groups-progress', slot, { index: i, status: 'error', error: err.message, total: groups.length, groupName: group.name, successCount, failCount })
+                if (!e.sender.isDestroyed()) {
+                    e.sender.send('post-groups-progress', slot, { index: i, status: 'error', error: err.message, total: groups.length, groupName: group.name, successCount, failCount })
+                }
             }
 
             // Delay between posts
             if (i < groups.length - 1 && state[slot] && state[slot].running) {
                 const delay = (delayMin + Math.random() * (delayMax - delayMin)) * 1000
-                if (!e.sender.isDestroyed()) e.sender.send('post-groups-progress', slot, { index: i, status: 'waiting', delay: Math.round(delay / 1000), total: groups.length, successCount, failCount })
+                if (!e.sender.isDestroyed()) {
+                    e.sender.send('post-groups-progress', slot, { index: i, status: 'waiting', delay: Math.round(delay / 1000), total: groups.length, successCount, failCount })
+                }
                 await page.waitForTimeout(delay)
 
                 if (restAfter > 0 && (i + 1) % restAfter === 0) {
-                    if (!e.sender.isDestroyed()) e.sender.send('post-groups-progress', slot, { index: i, status: 'resting', restSeconds, total: groups.length, successCount, failCount })
+                    if (!e.sender.isDestroyed()) {
+                        e.sender.send('post-groups-progress', slot, { index: i, status: 'resting', restSeconds, total: groups.length, successCount, failCount })
+                    }
                     await page.waitForTimeout(restSeconds * 1000)
                 }
             }
         }
 
+        if (e.sender.isDestroyed()) return { ok: false, error: 'Window closed' }
         state[slot] = null
-        if (!e.sender.isDestroyed()) e.sender.send('post-groups-done', slot, { successCount, failCount, total: groups.length })
+        e.sender.send('post-groups-done', slot, { successCount, failCount, total: groups.length })
         return { ok: true, successCount, failCount }
     })
 
@@ -160,8 +171,12 @@ async function createGroupPost(page, postText, filePaths) {
             captionFocused = await page.evaluate(`
                 (function () {
                     const selectors = [
+                        'div[aria-placeholder*="Create a public post"]',
+                        'div[aria-placeholder*="Create a post"]',
+                        'div[aria-placeholder*="Tulis sesuatu"]',
+                        'div[contenteditable="true"][role="textbox"]',
                         '[aria-placeholder="Create your pohst..."]',
-                        '[aria-placeholder*="Create your post"]',
+                        '[aria-placeholder*="Create your post"]'
                     ];
 
                     for (const sel of selectors) {
@@ -180,17 +195,13 @@ async function createGroupPost(page, postText, filePaths) {
             `)
         } catch (e) { /* evaluate failed */ }
 
-
         if (captionFocused) {
             await page.waitForTimeout(1000)
 
-            // Clear text (from facebook-groups-poster.js)
-            await page.keyboard.down('Control')
-            // await page.keyboard.press('a')
-            await page.keyboard.up('Control')
-            await page.waitForTimeout(300)
+            // Clear text just in case
+            await page.keyboard.shortcut(['Control', 'a'])
             await page.keyboard.press('Backspace')
-            await page.waitForTimeout(500)
+            await page.waitForTimeout(300)
 
             // Type caption with line breaks support
             const lines = postText.split('\n')
@@ -206,7 +217,7 @@ async function createGroupPost(page, postText, filePaths) {
             await page.waitForTimeout(1000)
             console.log('[CreateGroupPost] Caption typed successfully')
         } else {
-            console.log('[CreateGroupPost] Caption textbox not found, continuing without caption')
+            console.log('[CreateGroupPost] Caption textbox not found')
         }
     }
 
@@ -271,5 +282,5 @@ async function createGroupPost(page, postText, filePaths) {
     }
 
     await page.waitForTimeout(5000)
-    return true
+    return posted
 }
