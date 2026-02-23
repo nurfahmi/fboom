@@ -5,9 +5,9 @@ const ejs = require('ejs')
 const fs = require('fs')
 const Store = require('./lib/store')
 
-const SLOT_COUNT = 10
-const COLS = 5
-const ROWS = 2
+const SLOT_COUNT = 2
+const COLS = 2
+const ROWS = 1
 const HEADER_H = 56
 
 let managerWindow = null

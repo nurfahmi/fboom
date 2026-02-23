@@ -139,7 +139,9 @@ async function commentOnPost(page, commentText, imagePath) {
     try {
       // await page.click('[aria-label*="photo"]')
       // await page.waitForTimeout(1000)
-      await page.upload('[role="dialog"] [role="table"] input[type="file"]', imagePath)
+      await page.interceptFileChooser(imagePath, { persistent: true })
+await page.click('[aria-label*="Attach a photo"]')
+      await page.stopInterceptFileChooser()  // stop when done
       await page.waitForTimeout(3000)
     } catch (e) { /* optional */ }
   }
