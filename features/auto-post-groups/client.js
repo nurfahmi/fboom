@@ -5,8 +5,9 @@ const _pgSlotData = {} // per-slot storage
 let pgRunning = false
 
 function _savePgSlot(slot) {
-    _pgSlotData[slot] = _pgSlotData[slot] || { groups: [], postText: '', filePaths: [], delayMin: 10, delayMax: 120, restAfter: 5, restSeconds: 300, running: false }
+    _pgSlotData[slot] = _pgSlotData[slot] || { groups: [], title: '', postText: '', filePaths: [], delayMin: 10, delayMax: 120, restAfter: 5, restSeconds: 300, running: false }
     const data = _pgSlotData[slot]
+    data.title = document.getElementById('pgTitle')?.value || ''
     data.postText = document.getElementById('pgPostText')?.value || ''
     data.delayMin = parseInt(document.getElementById('pgDelayMin')?.value) || 10
     data.delayMax = parseInt(document.getElementById('pgDelayMax')?.value) || 120
@@ -16,8 +17,11 @@ function _savePgSlot(slot) {
 }
 
 function _loadPgSlot(slot) {
-    const data = _pgSlotData[slot] || { groups: [], postText: '', filePaths: [], delayMin: 10, delayMax: 120, restAfter: 5, restSeconds: 300, running: false }
+    const data = _pgSlotData[slot] || { groups: [], title: '', postText: '', filePaths: [], delayMin: 10, delayMax: 120, restAfter: 5, restSeconds: 300, running: false }
     _pgSlotData[slot] = data
+
+    const titleEl = document.getElementById('pgTitle')
+    if (titleEl) titleEl.value = data.title || ''
 
     const txtEl = document.getElementById('pgPostText')
     if (txtEl) txtEl.value = data.postText
@@ -42,7 +46,7 @@ slotSwitchCallbacks.push((action, slot) => {
 
 function _getCurPgData() {
     if (!_pgSlotData[currentSlot]) {
-        _pgSlotData[currentSlot] = { groups: [], postText: '', filePaths: [], delayMin: 10, delayMax: 120, restAfter: 5, restSeconds: 300, running: false }
+        _pgSlotData[currentSlot] = { groups: [], title: '', postText: '', filePaths: [], delayMin: 10, delayMax: 120, restAfter: 5, restSeconds: 300, running: false }
     }
     return _pgSlotData[currentSlot]
 }
@@ -208,6 +212,7 @@ async function startAutoPostGroups() {
 
     const config = {
         groups: data.groups,
+        title: data.title,
         postText: data.postText,
         filePaths: data.filePaths,
         delayMin: data.delayMin,

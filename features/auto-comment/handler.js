@@ -113,47 +113,214 @@ module.exports = function (getPage) {
   })
 }
 
-// Comment logic using electron-automation-core API only
+// Comment logic using electron-automation-core API
+// Adapted from facebook-comment-poster.js with robust file upload and multiline support
 async function commentOnPost(page, commentText, imagePath) {
   await page.waitForTimeout(2000)
 
-  // STEP 1: Click Comment button
-  try { await page.click('[aria-label="Comment"]') }
-  catch (e) { try { await page.click('div[role="textbox"][contenteditable="true"]') } catch (e2) { return false } }
-  await page.waitForTimeout(1500)
+  // ============================================================
+  // STEP 1: CLICK COMMENT BUTTON TO OPEN COMMENT BOX
+  // ============================================================
+  const commentButtonSelectors = [
+    '[aria-label="Comment"]',
+    '[role="button"][aria-label="Comment"]',
+    '[aria-label="Komentar"]',
+    '[role="button"][aria-label="Komentar"]',
+    '[aria-label="Tulis komentar"]',
+    'div[role="textbox"][data-lexical-editor="true"]',
+    'div[role="textbox"][aria-label*="Comment" i]',
+    'div[role="textbox"][aria-label*="comment" i]',
+    'div[role="textbox"][contenteditable="true"]',
+  ]
 
-  // STEP 2: Focus comment textbox
-  const boxSel = 'div[role="textbox"][contenteditable="true"]'
-  try { await page.waitForSelector(boxSel, 5000) } catch (e) { return false }
-  await page.focus(boxSel)
-  await page.waitForTimeout(300)
-
-  // STEP 3: Clear and type
-  await page.keyboard.shortcut(['Control', 'a'])
-  await page.keyboard.press('Backspace')
-  await page.keyboard.type(commentText, 50)
-  await page.waitForTimeout(500)
-
-  // STEP 4: Upload image if provided
-  if (imagePath && fs.existsSync(imagePath)) {
+  let commentButtonClicked = false
+  for (const selector of commentButtonSelectors) {
     try {
-      // await page.click('[aria-label*="photo"]')
-      // await page.waitForTimeout(1000)
-      await page.interceptFileChooser(imagePath, { persistent: true })
-await page.click('[aria-label*="Attach a photo"]')
-      await page.stopInterceptFileChooser()  // stop when done
-      await page.waitForTimeout(3000)
-    } catch (e) { /* optional */ }
+      await page.waitForSelector(selector, 3000)
+      await page.click(selector)
+      commentButtonClicked = true
+      await page.waitForTimeout(1500)
+      break
+    } catch (e) { continue }
   }
 
-  // STEP 5: Submit
-  try { await page.click('#focused-state-composer-submit [role="button"]') }
-  catch (e) {
-    try { await page.click('[aria-label="Comment"]') }
-    catch (e2) {
-      await page.focus(boxSel)
-      await page.keyboard.press('Enter')
+  if (!commentButtonClicked) {
+    console.log('[AutoComment] Comment button not found')
+    return false
+  }
+
+  // ============================================================
+  // STEP 2: FIND AND FOCUS COMMENT BOX
+  // ============================================================
+  await page.waitForTimeout(2000)
+
+  const commentBoxSelectors = [
+    'div[role="textbox"][contenteditable="true"][data-lexical-editor="true"]',
+    'div[role="textbox"][contenteditable="true"][aria-label*="Comment" i]',
+    'div[role="textbox"][contenteditable="true"][aria-label*="comment" i]',
+    'div[role="textbox"][contenteditable="true"][aria-label*="Komentar" i]',
+    'div[role="textbox"][contenteditable="true"][placeholder*="Write" i]',
+    'div[role="textbox"][contenteditable="true"]',
+    '[role="textbox"][contenteditable="true"]'
+  ]
+
+  let boxFound = false
+  let activeBoxSelector = null
+  for (const sel of commentBoxSelectors) {
+    try {
+      await page.waitForSelector(sel, 3000)
+      await page.click(sel)
+      activeBoxSelector = sel
+      boxFound = true
+      break
+    } catch (e) { continue }
+  }
+
+  if (!boxFound) {
+    // Fallback: scroll down and retry
+    try {
+      await page.evaluate('window.scrollTo(0, document.body.scrollHeight)')
+      await page.waitForTimeout(2000)
+      for (const sel of commentBoxSelectors) {
+        try {
+          await page.waitForSelector(sel, 2000)
+          await page.click(sel)
+          activeBoxSelector = sel
+          boxFound = true
+          break
+        } catch (e) { continue }
+      }
+    } catch (e) { /* ignore */ }
+  }
+
+  if (!boxFound) {
+    console.log('[AutoComment] Comment box not found')
+    return false
+  }
+
+  // ============================================================
+  // STEP 3: CLEAR AND TYPE COMMENT WITH MULTI-LINE SUPPORT
+  // ============================================================
+  await page.waitForTimeout(500)
+  await page.focus(activeBoxSelector)
+  await page.waitForTimeout(300)
+  await page.keyboard.shortcut(['Control', 'a'])
+  await page.keyboard.press('Backspace')
+  await page.waitForTimeout(300)
+
+  // Multi-line: split by \n and use Shift+Enter for new lines
+  const lines = commentText.split('\n')
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].length > 0) {
+      // Type in small chunks for reliability
+      const line = lines[i]
+      const chunkSize = 20
+      for (let c = 0; c < line.length; c += chunkSize) {
+        const chunk = line.substring(c, Math.min(c + chunkSize, line.length))
+        await page.keyboard.type(chunk, 30)
+        await page.waitForTimeout(50 + Math.random() * 100)
+      }
     }
+    if (i < lines.length - 1) {
+      await page.keyboard.shortcut(['Shift', 'Enter'])
+      await page.waitForTimeout(150)
+    }
+  }
+  await page.waitForTimeout(800)
+
+  // ============================================================
+  // STEP 4: UPLOAD IMAGE/FILE IF PROVIDED
+  // Same logic as facebook-comment-poster.js:
+  //   const fileInputs = await page.locator('input[type="file"]').all();
+  //   const fileInput = fileInputs.length > 1 ? fileInputs[1] : fileInputs[0];
+  //   await fileInput.setInputFiles(filePath);
+  // ============================================================
+  if (imagePath && fs.existsSync(imagePath)) {
+    console.log(`[AutoComment] Uploading file: ${path.basename(imagePath)}`)
+    try {
+      // Count file inputs on page
+      const fileInputCount = await page.evaluate(`document.querySelectorAll('input[type="file"]').length`)
+
+      if (fileInputCount > 0) {
+        // Use second input if available (for attachments), otherwise first — same as old script
+        const targetIndex = fileInputCount > 1 ? 1 : 0
+        await page.uploadByIndex('input[type="file"]', targetIndex, imagePath)
+        console.log(`[AutoComment] File uploaded to input[${targetIndex}] of ${fileInputCount}`)
+        await page.waitForTimeout(3000)
+      } else {
+        console.log('[AutoComment] No file input found for attachments')
+      }
+    } catch (e) {
+      console.log('[AutoComment] File upload failed:', e.message)
+    }
+  }
+
+  // ============================================================
+  // STEP 5: SUBMIT COMMENT
+  // ============================================================
+  await page.waitForTimeout(500)
+
+  let submitted = false
+
+  // Try 1: Focused state composer submit button
+  if (!submitted) {
+    try {
+      await page.click('#focused-state-composer-submit [role="button"]')
+      submitted = true
+    } catch (e) { /* try next */ }
+  }
+
+  // Try 2: aria-label based submit buttons
+  const submitSelectors = [
+    '[aria-label="Comment"][role="button"]',
+    '[aria-label="Komentar"][role="button"]',
+    '[aria-label="Post"][role="button"]',
+    '[aria-label="Kirim"][role="button"]',
+    '[aria-label="Comment"]',
+    '[aria-label="Komentar"]',
+    '[aria-label="Post"]',
+  ]
+  if (!submitted) {
+    for (const sel of submitSelectors) {
+      try {
+        await page.click(sel)
+        submitted = true
+        break
+      } catch (e) { continue }
+    }
+  }
+
+  // Try 3: Evaluate to find a visible submit/comment button
+  if (!submitted) {
+    try {
+      submitted = await page.evaluate(`
+        (function() {
+          const btns = document.querySelectorAll('[role="button"]');
+          for (const btn of btns) {
+            const label = (btn.getAttribute('aria-label') || '').toLowerCase();
+            const text = (btn.textContent || '').trim().toLowerCase();
+            if (label === 'comment' || label === 'komentar' || label === 'post' || label === 'kirim' ||
+                text === 'comment' || text === 'komentar' || text === 'post' || text === 'kirim') {
+              const rect = btn.getBoundingClientRect();
+              if (rect.width > 0 && rect.height > 0) {
+                btn.click();
+                return true;
+              }
+            }
+          }
+          return false;
+        })()
+      `)
+    } catch (e) { /* ignore */ }
+  }
+
+  // Try 4: Last resort — Enter key
+  if (!submitted) {
+    try {
+      await page.focus(activeBoxSelector)
+      await page.keyboard.press('Enter')
+      submitted = true
+    } catch (e) { /* ignore */ }
   }
 
   await page.waitForTimeout(3000)

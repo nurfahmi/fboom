@@ -12,7 +12,7 @@
   "description": "",
   "dependencies": {
     "ejs": "^4.0.1",
-    "electron": "^40.6.0",
+    "electron": "40.0.0",
     "ishbrowser": "github:nurfahmi/ISHbrowser"
   }
 }

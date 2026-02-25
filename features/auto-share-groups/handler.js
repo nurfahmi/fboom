@@ -18,7 +18,7 @@ module.exports = function (getPage) {
         const page = getPage(slot)
         if (!page) return { ok: false, error: 'No browser open' }
 
-        const { groups, postUrl, caption, delayMin, delayMax, restAfter, restSeconds } = config
+        const { groups, postUrl, title, caption, delayMin, delayMax, restAfter, restSeconds } = config
         if (!groups || groups.length === 0) return { ok: false, error: 'No target groups' }
         if (!postUrl) return { ok: false, error: 'No post URL' }
 
@@ -26,44 +26,61 @@ module.exports = function (getPage) {
         let successCount = 0
         let failCount = 0
 
+        const sendProgress = (data) => {
+            try {
+                if (e.sender && !e.sender.isDestroyed()) {
+                    e.sender.send('share-groups-progress', slot, data)
+                }
+            } catch (err) { }
+        }
+
         for (let i = 0; i < groups.length; i++) {
             if (!state[slot] || !state[slot].running) break
 
             const group = groups[i]
-            e.sender.send('share-groups-progress', slot, { index: i, status: 'processing', total: groups.length, groupName: group.name, successCount, failCount })
+            sendProgress({ index: i, status: 'processing', total: groups.length, groupName: group.name, successCount, failCount })
 
             try {
+                const finalTitle = spinText(title)
                 const finalCaption = spinText(caption)
-                const success = await shareToGroup(page, postUrl, group, finalCaption)
+                const success = await shareToGroup(page, postUrl, group, finalTitle, finalCaption)
 
                 if (success) {
                     successCount++
-                    e.sender.send('share-groups-progress', slot, { index: i, status: 'success', total: groups.length, groupName: group.name, successCount, failCount })
+                    sendProgress({ index: i, status: 'success', total: groups.length, groupName: group.name, successCount, failCount })
                 } else {
                     failCount++
-                    e.sender.send('share-groups-progress', slot, { index: i, status: 'error', error: 'Failed to share', total: groups.length, groupName: group.name, successCount, failCount })
+                    sendProgress({ index: i, status: 'error', error: 'Failed to share', total: groups.length, groupName: group.name, successCount, failCount })
                 }
             } catch (err) {
                 failCount++
-                e.sender.send('share-groups-progress', slot, { index: i, status: 'error', error: err.message, total: groups.length, groupName: group.name, successCount, failCount })
+                sendProgress({ index: i, status: 'error', error: err.message, total: groups.length, groupName: group.name, successCount, failCount })
             }
 
             // Delay between shares
             if (i < groups.length - 1 && state[slot] && state[slot].running) {
                 const delay = (delayMin + Math.random() * (delayMax - delayMin)) * 1000
-                e.sender.send('share-groups-progress', slot, { index: i, status: 'waiting', delay: Math.round(delay / 1000), total: groups.length, successCount, failCount })
+                sendProgress({ index: i, status: 'waiting', delay: Math.round(delay / 1000), total: groups.length, successCount, failCount })
                 await page.waitForTimeout(delay)
 
                 // Rest time
                 if (restAfter > 0 && (i + 1) % restAfter === 0) {
-                    e.sender.send('share-groups-progress', slot, { index: i, status: 'resting', restSeconds, total: groups.length, successCount, failCount })
+                    sendProgress({ index: i, status: 'resting', restSeconds, total: groups.length, successCount, failCount })
                     await page.waitForTimeout(restSeconds * 1000)
                 }
             }
         }
 
         state[slot] = null
-        e.sender.send('share-groups-done', slot, { successCount, failCount, total: groups.length })
+        runningSlots.delete(slot)
+
+        // Safety guard for the final 'done' message
+        try {
+            if (e.sender && !e.sender.isDestroyed()) {
+                e.sender.send('share-groups-done', slot, { successCount, failCount, total: groups.length })
+            }
+        } catch (err) { console.error('[AutoShare] IPC final send failed:', err.message) }
+
         return { ok: true, successCount, failCount }
     })
 
@@ -104,7 +121,7 @@ module.exports = function (getPage) {
 }
 
 // Share logic using ISHBrowser API only
-async function shareToGroup(page, postUrl, group, caption) {
+async function shareToGroup(page, postUrl, group, title, caption) {
     try {
         // Clean group name
         let cleanName = group.name
@@ -305,27 +322,29 @@ async function shareToGroup(page, postUrl, group, caption) {
         }
         await page.waitForTimeout(2000)
 
-        // STEP 6: Fill caption AFTER group is selected (correct order from facebook-share-poster.js)
-        if (caption && caption.trim()) {
+        // STEP 6: Fill title and caption AFTER group is selected (correct order from facebook-share-poster.js)
+        if ((title && title.trim()) || (caption && caption.trim())) {
             // Use page.evaluate to find and focus the caption textbox
             let captionFocused = false
             try {
                 captionFocused = await page.evaluate(`
                     (function () {
-                        const selectors = [
-                            '[aria-placeholder="Create your pohst..."]',
-                            '[aria-placeholder*="Create your post"]',
-                        ];
+                    const selectors = [
+                        '[aria-placeholder*="Create your post"]',
+                        '[aria-placeholder="Create your post..."]',
+                        '[aria-placeholder="Create your pohst..."]'
+                    ];
 
-                        for (const sel of selectors) {
-                            try {
-                                const el = document.querySelector(sel);
-                                if (el) {
-                                    el.click();
-                                    return true;
-                                }
-                            } catch (e) {}
-                        }
+                    for (const sel of selectors) {
+                        try {
+                            const el = document.querySelector(sel);
+                            if (el) {
+                                el.click();
+                                el.focus();
+                                return true;
+                            }
+                        } catch (e) {}
+                    }
 
                         return false;
                     })();
@@ -334,22 +353,49 @@ async function shareToGroup(page, postUrl, group, caption) {
 
 
             if (captionFocused) {
-                await page.waitForTimeout(500)
-
-
-                // Type caption with line breaks support
-                const lines = caption.split('\n')
-                for (let i = 0; i < lines.length; i++) {
-                    if (lines[i].length > 0) {
-                        await page.keyboard.type(lines[i], 30)
-                    }
-                    if (i < lines.length - 1) {
-                        await page.keyboard.shortcut(['Shift', 'Enter'])
-                        await page.waitForTimeout(100)
-                    }
-                }
                 await page.waitForTimeout(1000)
-                console.log('[ShareToGroup] Caption typed successfully')
+
+                // Clear text just in case
+                await page.keyboard.shortcut(['Control', 'a'])
+                await page.keyboard.press('Backspace')
+                await page.waitForTimeout(300)
+
+                // Type title first (if provided)
+                if (title && title.trim()) {
+                    const titleLines = title.split('\n')
+                    for (let i = 0; i < titleLines.length; i++) {
+                        if (titleLines[i].length > 0) {
+                            await page.keyboard.type(titleLines[i], 20)
+                        }
+                        if (i < titleLines.length - 1) {
+                            await page.keyboard.shortcut(['Shift', 'Enter'])
+                            await page.waitForTimeout(100)
+                        }
+                    }
+                    console.log('[ShareToGroup] Title typed successfully')
+
+                    // Press Tab to move to caption field
+                    await page.waitForTimeout(500)
+                    await page.keyboard.press('Tab')
+                    await page.waitForTimeout(500)
+                }
+
+                // Type caption (if provided)
+                if (caption && caption.trim()) {
+                    const lines = caption.split('\n')
+                    for (let i = 0; i < lines.length; i++) {
+                        if (lines[i].length > 0) {
+                            await page.keyboard.type(lines[i], 20)
+                        }
+                        if (i < lines.length - 1) {
+                            await page.keyboard.shortcut(['Shift', 'Enter'])
+                            await page.waitForTimeout(100)
+                        }
+                    }
+                    console.log('[ShareToGroup] Caption typed successfully')
+                }
+
+                await page.waitForTimeout(1000)
             } else {
                 console.log('[ShareToGroup] Caption textbox not found, continuing without caption')
             }

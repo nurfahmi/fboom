@@ -46,10 +46,16 @@
 
   <!-- TAB: Post Content -->
   <div class="pg-panel hidden" data-pgpanel="content">
-    <!-- Post text -->
+    <!-- Title -->
     <div class="mb-3">
-      <label class="block text-[11px] text-gray-500 mb-1">Post Text <span class="text-gray-600">(use {{opt1|opt2}} for spintax)</span></label>
-      <textarea id="pgPostText" rows="4" placeholder="Write your post content here..." class="w-full px-2.5 py-2 bg-dark-100 border border-dark-300 rounded-md text-sm text-gray-200 outline-none focus:border-accent resize-none"></textarea>
+      <label class="block text-[11px] text-gray-500 mb-1">Title <span class="text-gray-600">(optional, typed before caption + Tab)</span></label>
+      <input type="text" id="pgTitle" placeholder="e.g. Jual Barang" class="w-full px-2.5 py-2 bg-dark-100 border border-dark-300 rounded-md text-sm text-gray-200 outline-none focus:border-accent">
+    </div>
+
+    <!-- Post text / Caption -->
+    <div class="mb-3">
+      <label class="block text-[11px] text-gray-500 mb-1">Caption <span class="text-gray-600">(use {{opt1|opt2}} for spintax)</span></label>
+      <textarea id="pgPostText" rows="4" placeholder="Write your post caption here..." class="w-full px-2.5 py-2 bg-dark-100 border border-dark-300 rounded-md text-sm text-gray-200 outline-none focus:border-accent resize-none"></textarea>
     </div>
 
     <!-- Media files -->

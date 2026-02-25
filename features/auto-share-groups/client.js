@@ -5,9 +5,10 @@ const _sgSlotData = {} // per-slot storage
 let sgRunning = false
 
 function _saveSgSlot(slot) {
-    _sgSlotData[slot] = _sgSlotData[slot] || { groups: [], postUrl: '', caption: '', delayMin: 10, delayMax: 120, restAfter: 5, restSeconds: 300, running: false }
+    _sgSlotData[slot] = _sgSlotData[slot] || { groups: [], postUrl: '', title: '', caption: '', delayMin: 10, delayMax: 120, restAfter: 5, restSeconds: 300, running: false }
     const data = _sgSlotData[slot]
     data.postUrl = document.getElementById('sgPostUrl')?.value || ''
+    data.title = document.getElementById('sgTitle')?.value || ''
     data.caption = document.getElementById('sgCaption')?.value || ''
     data.delayMin = parseInt(document.getElementById('sgDelayMin')?.value) || 10
     data.delayMax = parseInt(document.getElementById('sgDelayMax')?.value) || 120
@@ -17,11 +18,14 @@ function _saveSgSlot(slot) {
 }
 
 function _loadSgSlot(slot) {
-    const data = _sgSlotData[slot] || { groups: [], postUrl: '', caption: '', delayMin: 10, delayMax: 120, restAfter: 5, restSeconds: 300, running: false }
+    const data = _sgSlotData[slot] || { groups: [], postUrl: '', title: '', caption: '', delayMin: 10, delayMax: 120, restAfter: 5, restSeconds: 300, running: false }
     _sgSlotData[slot] = data
 
     const urlEl = document.getElementById('sgPostUrl')
     if (urlEl) urlEl.value = data.postUrl
+
+    const titleEl = document.getElementById('sgTitle')
+    if (titleEl) titleEl.value = data.title || ''
 
     const capEl = document.getElementById('sgCaption')
     if (capEl) capEl.value = data.caption
@@ -45,7 +49,7 @@ slotSwitchCallbacks.push((action, slot) => {
 
 function _getCurSgData() {
     if (!_sgSlotData[currentSlot]) {
-        _sgSlotData[currentSlot] = { groups: [], postUrl: '', caption: '', delayMin: 10, delayMax: 120, restAfter: 5, restSeconds: 300, running: false }
+        _sgSlotData[currentSlot] = { groups: [], postUrl: '', title: '', caption: '', delayMin: 10, delayMax: 120, restAfter: 5, restSeconds: 300, running: false }
     }
     return _sgSlotData[currentSlot]
 }
@@ -179,6 +183,7 @@ async function startAutoShareGroups() {
     const config = {
         groups: data.groups,
         postUrl: data.postUrl,
+        title: data.title,
         caption: data.caption,
         delayMin: data.delayMin,
         delayMax: data.delayMax,

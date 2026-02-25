@@ -18,7 +18,7 @@ module.exports = function (getPage) {
         const page = getPage(slot)
         if (!page) return { ok: false, error: 'No browser open' }
 
-        const { groups, postText, filePaths, delayMin, delayMax, restAfter, restSeconds } = config
+        const { groups, title, postText, filePaths, delayMin, delayMax, restAfter, restSeconds } = config
         if (!groups || groups.length === 0) return { ok: false, error: 'No target groups' }
         if (!postText && (!filePaths || filePaths.length === 0)) return { ok: false, error: 'No post content (text or media)' }
 
@@ -38,8 +38,9 @@ module.exports = function (getPage) {
                 await page.goto(groupUrl)
                 await page.waitForTimeout(5000)
 
+                const finalTitle = spinText(title)
                 const finalText = spinText(postText)
-                const success = await createGroupPost(page, finalText, filePaths)
+                const success = await createGroupPost(page, finalTitle, finalText, filePaths)
 
                 if (success) {
                     successCount++
@@ -131,7 +132,7 @@ module.exports = function (getPage) {
 }
 
 // Post logic using ISHBrowser API only
-async function createGroupPost(page, postText, filePaths) {
+async function createGroupPost(page, title, postText, filePaths) {
     await page.waitForTimeout(3000)
 
     // STEP 1: Click "Write something..." button
@@ -150,41 +151,51 @@ async function createGroupPost(page, postText, filePaths) {
         const existingFiles = filePaths.filter(f => fs.existsSync(f))
         if (existingFiles.length > 0) {
             await page.waitForTimeout(2000)
-            for (const filePath of existingFiles) {
-                try {
-                    await page.interceptFileChooser(filePath, { persistent: true })
-                    await page.click('div[role="button"][aria-label="Photo/video"]')
-                    await page.stopInterceptFileChooser()
-                    await page.waitForTimeout(2000)
-                } catch (e) { continue }
+
+            // Reliability Fix: Count file inputs and use uploadByIndex (matching scrip-old logic)
+            const inputs = await page.$$('input[type="file"]')
+            const inputCount = inputs.length
+
+            if (inputCount > 0) {
+                console.log(`[CreateGroupPost] Found ${inputCount} file inputs, using index 0 for group post`)
+                for (const filePath of existingFiles) {
+                    try {
+                        await page.uploadByIndex(0, filePath)
+                        await page.waitForTimeout(1500)
+                    } catch (e) {
+                        console.error(`[CreateGroupPost] Upload failed for ${filePath}:`, e)
+                        continue
+                    }
+                }
+            } else {
+                console.warn('[CreateGroupPost] No file input found for upload')
             }
-            const waitTime = Math.min(3000 + (existingFiles.length * 1500), 15000)
+
+            const waitTime = Math.min(2000 + (existingFiles.length * 1000), 10000)
             await page.waitForTimeout(waitTime)
         }
     }
 
-    // STEP 3: Type caption
-    if (postText && postText.trim()) {
+    // STEP 3: Type title and caption
+    // Flow: click textbox → type title → Tab → type caption
+    if ((title && title.trim()) || (postText && postText.trim())) {
         // Use page.evaluate to find and focus the caption textbox
         let captionFocused = false
         try {
             captionFocused = await page.evaluate(`
                 (function () {
                     const selectors = [
-                        'div[aria-placeholder*="Create a public post"]',
-                        'div[aria-placeholder*="Create a post"]',
-                        'div[aria-placeholder*="Tulis sesuatu"]',
-                        'div[contenteditable="true"][role="textbox"]',
-                        '[aria-placeholder="Create your pohst..."]',
-                        '[aria-placeholder*="Create your post"]'
+                        '[aria-placeholder*="Create your post"]',
+                        '[aria-placeholder="Create your post..."]',
+                        '[aria-placeholder="Create your pohst..."]'
                     ];
 
                     for (const sel of selectors) {
                         try {
                             const el = document.querySelector(sel);
                             if (el) {
-                                el.focus();
                                 el.click();
+                                el.focus();
                                 return true;
                             }
                         } catch (e) {}
@@ -203,19 +214,42 @@ async function createGroupPost(page, postText, filePaths) {
             await page.keyboard.press('Backspace')
             await page.waitForTimeout(300)
 
-            // Type caption with line breaks support
-            const lines = postText.split('\n')
-            for (let i = 0; i < lines.length; i++) {
-                if (lines[i].length > 0) {
-                    await page.keyboard.type(lines[i], 20)
+            // Type title first (if provided)
+            if (title && title.trim()) {
+                const titleLines = title.split('\n')
+                for (let i = 0; i < titleLines.length; i++) {
+                    if (titleLines[i].length > 0) {
+                        await page.keyboard.type(titleLines[i], 20)
+                    }
+                    if (i < titleLines.length - 1) {
+                        await page.keyboard.shortcut(['Shift', 'Enter'])
+                        await page.waitForTimeout(100)
+                    }
                 }
-                if (i < lines.length - 1) {
-                    await page.keyboard.shortcut(['Shift', 'Enter'])
-                    await page.waitForTimeout(100)
-                }
+                console.log('[CreateGroupPost] Title typed successfully')
+
+                // Press Tab to move to caption field
+                await page.waitForTimeout(500)
+                await page.keyboard.press('Tab')
+                await page.waitForTimeout(500)
             }
+
+            // Type caption (if provided)
+            if (postText && postText.trim()) {
+                const lines = postText.split('\n')
+                for (let i = 0; i < lines.length; i++) {
+                    if (lines[i].length > 0) {
+                        await page.keyboard.type(lines[i], 20)
+                    }
+                    if (i < lines.length - 1) {
+                        await page.keyboard.shortcut(['Shift', 'Enter'])
+                        await page.waitForTimeout(100)
+                    }
+                }
+                console.log('[CreateGroupPost] Caption typed successfully')
+            }
+
             await page.waitForTimeout(1000)
-            console.log('[CreateGroupPost] Caption typed successfully')
         } else {
             console.log('[CreateGroupPost] Caption textbox not found')
         }

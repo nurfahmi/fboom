@@ -34,221 +34,483 @@ module.exports = function (getPage) {
         let scrollCount = 0
         const maxScrollAttempts = 200
 
-        const sendProgress = (data) => { try { if (e.sender && !e.sender.isDestroyed()) e.sender.send('feed-engagement-progress', slot, data) } catch (err) { } }
-        const sendDone = (data) => { try { if (e.sender && !e.sender.isDestroyed()) e.sender.send('feed-engagement-done', slot, data) } catch (err) { } }
+        // Track processed post areas to avoid duplicates (same as scrip-old)
+        const processedLikeAreas = new Set()
+        const processedCommentAreas = new Set()
+        let commentFailCount = 0
+        const MAX_CONSECUTIVE_FAILURES = 3
+
+        const sendProgress = (data) => {
+            if (!e.sender || e.sender.isDestroyed()) return
+            try {
+                e.sender.send('feed-engagement-progress', String(slot), {
+                    status: String(data.status || ''),
+                    message: String(data.message || ''),
+                    likeCount: Number(likeCount),
+                    commentCount: Number(commentCount),
+                    targetLikes: Number(targetLikes),
+                    targetComments: Number(targetComments)
+                })
+            } catch (err) { console.error('[FeedEngagement] IPC Progress Error:', err.message) }
+        }
+
+        const sendDone = (data) => {
+            if (!e.sender || e.sender.isDestroyed()) return
+            try {
+                e.sender.send('feed-engagement-done', String(slot), {
+                    status: String(data.status || ''),
+                    error: data.error ? String(data.error) : undefined,
+                    likeCount: Number(likeCount),
+                    commentCount: Number(commentCount),
+                    targetLikes: Number(targetLikes),
+                    targetComments: Number(targetComments)
+                })
+            } catch (err) { console.error('[FeedEngagement] IPC Done Error:', err.message) }
+        }
+
         const isRunning = () => state[slot] && state[slot].running
 
+        // Helper: random human-like scrolling (matching scrip-old)
+        const randomHumanScroll = async () => {
+            const randomScrolls = Math.floor(Math.random() * 8) + 2 // 2-10 times
+            sendProgress({ status: 'scrolling', message: `📜 Random scrolling ${randomScrolls} times...` })
+            for (let s = 0; s < randomScrolls; s++) {
+                if (!isRunning()) break
+                try {
+                    await page.evaluate(`window.scrollBy({ top: ${Math.floor(Math.random() * 300) + 150}, behavior: 'smooth' })`)
+                    await page.waitForTimeout(600 + Math.random() * 600)
+                } catch (e) { break }
+            }
+        }
+
         try {
-            // Navigate to feed if needed
+            // STEP 1: Navigate to Facebook Home Feed
+            sendProgress({ status: 'navigating', message: '🌐 Navigating to Facebook Beranda...' })
             try {
-                const url = page.url()
-                if (!url.includes('facebook.com') || url.includes('login')) {
-                    await page.goto('https://www.facebook.com/')
-                    await page.waitForTimeout(3000)
-                }
-            } catch (e) {
                 await page.goto('https://www.facebook.com/')
-                await page.waitForTimeout(3000)
+                await page.waitForTimeout(5000)
+            } catch (navErr) {
+                console.warn('[FeedEngagement] Initial navigation failed:', navErr.message)
+                await page.goto('https://www.facebook.com/')
+                await page.waitForTimeout(5000)
             }
 
-            sendProgress({ status: 'started', message: '🚀 Starting feed engagement...', likeCount, commentCount, targetLikes, targetComments })
+            sendProgress({ status: 'started', message: '🚀 Starting feed engagement...' })
 
-            // ===== PHASE 1: LIKES =====
+            // ===== PHASE 1: LIKES (using page.evaluate to find buttons, like scrip-old) =====
             if (enableLike && targetLikes > 0) {
-                sendProgress({ status: 'phase', message: `❤️ Phase 1: Liking posts (0/${targetLikes})...`, likeCount, commentCount, targetLikes, targetComments })
+                sendProgress({ status: 'phase', message: `❤️ Phase 1: Liking posts (0/${targetLikes})...` })
 
+                scrollCount = 0
                 while (isRunning() && likeCount < targetLikes && scrollCount < maxScrollAttempts) {
                     scrollCount++
 
-                    // Find like buttons using $$() + innerText()
-                    let liked = false
+                    // Use page.evaluate to find all Like buttons in viewport (same logic as scrip-old)
+                    let likedInThisCycle = false
                     try {
-                        const btns = await page.$$('[role="button"]')
-                        for (const btn of btns) {
-                            if (!isRunning() || likeCount >= targetLikes) { await btn.dispose(); break }
-                            try {
-                                const text = await btn.innerText()
-                                const trimmed = (text || '').trim().toLowerCase()
-                                if (trimmed === 'like' || trimmed === 'suka') {
-                                    const visible = await btn.isVisible()
-                                    if (visible) {
-                                        await btn.scrollIntoView()
-                                        await page.waitForTimeout(300)
-                                        await btn.click()
-                                        await page.waitForTimeout(800)
-
-                                        likeCount++
-                                        actionCount++
-                                        liked = true
-                                        sendProgress({ status: 'liked', message: `❤️ Like #${likeCount}/${targetLikes}`, likeCount, commentCount, targetLikes, targetComments })
-                                        await btn.dispose()
-
-                                        const delay = Math.floor((delayMin + Math.random() * (delayMax - delayMin)) * 1000)
-                                        sendProgress({ status: 'waiting', message: `⏱️ Waiting ${Math.round(delay / 1000)}s...`, likeCount, commentCount, targetLikes, targetComments })
-                                        await page.waitForTimeout(delay)
-
-                                        if (restAfter > 0 && actionCount > 0 && actionCount % restAfter === 0) {
-                                            sendProgress({ status: 'resting', message: `💤 Resting ${restSeconds}s...`, likeCount, commentCount, targetLikes, targetComments })
-                                            await page.waitForTimeout(restSeconds * 1000)
+                        const likeButtons = await page.evaluate(`
+                            (function() {
+                                const buttons = [];
+                                const scrollY = window.scrollY || window.pageYOffset;
+                                document.querySelectorAll('*').forEach(el => {
+                                    const text = el.textContent?.trim().toLowerCase();
+                                    if (text === 'like' || text === 'suka') {
+                                        const button = el.closest('[role="button"]');
+                                        if (button) {
+                                            const rect = button.getBoundingClientRect();
+                                            if (rect.width > 0 && rect.height > 0 && rect.top > 100 && rect.top < window.innerHeight - 100) {
+                                                const absoluteTop = scrollY + rect.top;
+                                                const ariaPressed = button.getAttribute('aria-pressed');
+                                                buttons.push({
+                                                    postArea: Math.floor(absoluteTop / 300),
+                                                    x: rect.x + rect.width / 2,
+                                                    y: rect.y + rect.height / 2,
+                                                    top: rect.top,
+                                                    absoluteTop: absoluteTop,
+                                                    alreadyLiked: ariaPressed === 'true'
+                                                });
+                                            }
                                         }
-                                        break
                                     }
-                                }
-                                await btn.dispose()
-                            } catch (e) { continue }
-                        }
-                    } catch (e) { /* skip this scroll cycle */ }
+                                });
+                                return buttons.sort((a, b) => a.top - b.top);
+                            })()
+                        `)
 
-                    // Scroll to find more posts
-                    const scrollAmt = 500 + Math.floor(Math.random() * 300)
-                    await page.mouse.wheel(0, scrollAmt)
-                    await page.waitForTimeout(2000)
+                        if (likeButtons && likeButtons.length > 0) {
+                            for (const btn of likeButtons) {
+                                if (!isRunning() || likeCount >= targetLikes) break
+
+                                // Skip already liked or already processed
+                                if (btn.alreadyLiked) continue
+                                if (processedLikeAreas.has(btn.postArea)) continue
+
+                                // Mark as processed BEFORE action (same as scrip-old)
+                                processedLikeAreas.add(btn.postArea)
+
+                                // Click the like button using coordinates
+                                try {
+                                    await page.evaluate(`
+                                        (function() {
+                                            const el = document.elementFromPoint(${btn.x}, ${btn.y});
+                                            if (el) {
+                                                const button = el.closest('[role="button"]') || el;
+                                                button.click();
+                                            }
+                                        })()
+                                    `)
+                                    await page.waitForTimeout(800)
+
+                                    likeCount++
+                                    actionCount++
+                                    likedInThisCycle = true
+                                    sendProgress({ status: 'liked', message: `❤️ Like #${likeCount}/${targetLikes} (Post area: ${btn.postArea})` })
+
+                                    // Random human scroll after each like (same as scrip-old)
+                                    await randomHumanScroll()
+
+                                    // Random delay
+                                    const delay = Math.floor((delayMin + Math.random() * (delayMax - delayMin)) * 1000)
+                                    sendProgress({ status: 'waiting', message: `⏱️ Waiting ${Math.round(delay / 1000)}s...` })
+                                    await page.waitForTimeout(delay)
+
+                                    // Rest time check
+                                    if (restAfter > 0 && actionCount > 0 && actionCount % restAfter === 0) {
+                                        sendProgress({ status: 'resting', message: `💤 Resting ${restSeconds}s...` })
+                                        await page.waitForTimeout(restSeconds * 1000)
+                                    }
+
+                                    break // Process one like per scroll cycle
+                                } catch (clickErr) {
+                                    console.log('[FeedEngagement] Like click error:', clickErr.message)
+                                }
+                            }
+                        }
+                    } catch (evalErr) {
+                        console.log('[FeedEngagement] Like evaluate error:', evalErr.message)
+                    }
+
+                    // Scroll down to find more posts if no like was performed
+                    if (!likedInThisCycle) {
+                        try {
+                            const scrollAmt = 600 + Math.floor(Math.random() * 400)
+                            await page.evaluate(`window.scrollBy({ top: ${scrollAmt}, behavior: 'smooth' })`)
+                            await page.waitForTimeout(2500)
+                        } catch (e) { /* ignore scroll error */ }
+                    }
                 }
+
+                sendProgress({ status: 'phase-done', message: `✅ Like phase done: ${likeCount}/${targetLikes}` })
             }
 
-            // ===== PHASE 2: COMMENTS =====
+            // ===== PHASE 2: COMMENTS (using ISHBrowser API pattern from auto-comment handler) =====
             if (enableComment && targetComments > 0 && commentTemplates.length > 0) {
-                sendProgress({ status: 'phase', message: `💬 Phase 2: Commenting (0/${targetComments})...`, likeCount, commentCount, targetLikes, targetComments })
+                sendProgress({ status: 'phase', message: `💬 Phase 2: Commenting (0/${targetComments})...` })
 
                 scrollCount = 0
-                let commentFailCount = 0
+                commentFailCount = 0
 
                 while (isRunning() && commentCount < targetComments && scrollCount < maxScrollAttempts) {
                     scrollCount++
 
-                    // Find comment button using $$()
-                    let foundComment = false
+                    // Find comment buttons using page.evaluate (same logic as scrip-old)
+                    let commentBtnInfo = null
                     try {
-                        const commentBtns = await page.$$('[aria-label="Comment"], [aria-label="Komentar"], [aria-label="Leave a comment"]')
-                        for (const btn of commentBtns) {
-                            try {
-                                const visible = await btn.isVisible()
-                                if (visible) {
-                                    await btn.scrollIntoView()
-                                    await page.waitForTimeout(500)
-                                    await btn.click()
-                                    await page.waitForTimeout(2000)
-                                    foundComment = true
-                                    await btn.dispose()
+                        const commentButtons = await page.evaluate(`
+                            (function() {
+                                const buttons = [];
+                                const scrollY = window.scrollY || window.pageYOffset;
+
+                                // Strategy 1: aria-label selectors
+                                const commentSelectors = [
+                                    '[aria-label="Comment"]',
+                                    '[aria-label="Komentar"]',
+                                    '[role="button"][aria-label="Comment"]',
+                                    '[role="button"][aria-label="Komentar"]',
+                                    '[aria-label="Leave a comment"]',
+                                    '[aria-label="Write a comment"]'
+                                ];
+
+                                commentSelectors.forEach(selector => {
+                                    document.querySelectorAll(selector).forEach(button => {
+                                        const rect = button.getBoundingClientRect();
+                                        if (rect.width > 0 && rect.height > 0 && rect.top > 100 && rect.top < window.innerHeight - 100) {
+                                            const absoluteTop = scrollY + rect.top;
+                                            const postArea = Math.floor(absoluteTop / 300);
+                                            const exists = buttons.some(b => b.postArea === postArea);
+                                            if (!exists) {
+                                                buttons.push({
+                                                    postArea: postArea,
+                                                    x: rect.x + rect.width / 2,
+                                                    y: rect.y + rect.height / 2,
+                                                    top: rect.top,
+                                                    absoluteTop: absoluteTop
+                                                });
+                                            }
+                                        }
+                                    });
+                                });
+
+                                // Strategy 2: Text-based matching (fallback)
+                                document.querySelectorAll('[role="button"]').forEach(button => {
+                                    const text = button.textContent?.trim().toLowerCase() || '';
+                                    if (text === 'comment' || text === 'komentar') {
+                                        const rect = button.getBoundingClientRect();
+                                        if (rect.width > 0 && rect.height > 0 && rect.top > 100 && rect.top < window.innerHeight - 100) {
+                                            const absoluteTop = scrollY + rect.top;
+                                            const postArea = Math.floor(absoluteTop / 300);
+                                            const exists = buttons.some(b => b.postArea === postArea);
+                                            if (!exists) {
+                                                buttons.push({
+                                                    postArea: postArea,
+                                                    x: rect.x + rect.width / 2,
+                                                    y: rect.y + rect.height / 2,
+                                                    top: rect.top,
+                                                    absoluteTop: absoluteTop
+                                                });
+                                            }
+                                        }
+                                    }
+                                });
+
+                                return buttons.sort((a, b) => a.top - b.top);
+                            })()
+                        `)
+
+                        // Find first un-processed comment button
+                        if (commentButtons && commentButtons.length > 0) {
+                            for (const btn of commentButtons) {
+                                if (!processedCommentAreas.has(btn.postArea)) {
+                                    commentBtnInfo = btn
                                     break
                                 }
-                                await btn.dispose()
-                            } catch (e) { continue }
+                            }
                         }
-                    } catch (e) { /* no buttons */ }
+                    } catch (evalErr) {
+                        console.log('[FeedEngagement] Comment evaluate error:', evalErr.message)
+                    }
 
-                    if (!foundComment) {
-                        await page.mouse.wheel(0, 700)
-                        await page.waitForTimeout(2500)
+                    // If no comment button found, scroll and continue
+                    if (!commentBtnInfo) {
+                        try {
+                            await page.evaluate(`window.scrollBy({ top: 700, behavior: 'smooth' })`)
+                            await page.waitForTimeout(3000)
+                        } catch (e) { /* ignore */ }
                         continue
                     }
 
+                    // Click comment button using coordinates (same as scrip-old)
                     try {
-                        // Pick random comment
-                        const randomTemplate = commentTemplates[Math.floor(Math.random() * commentTemplates.length)]
-                        const commentText = spinText(randomTemplate.text)
-
-                        // Find and click comment box using $()
-                        const boxSelectors = [
-                            'div[role="textbox"][contenteditable="true"][data-lexical-editor="true"]',
-                            'div[role="textbox"][contenteditable="true"][aria-label*="Comment"]',
-                            'div[role="textbox"][contenteditable="true"][aria-label*="Komentar"]',
-                            'div[role="textbox"][contenteditable="true"][aria-label*="Write"]',
-                            'div[role="textbox"][contenteditable="true"]'
-                        ]
-
-                        let boxHandle = null
-                        for (const sel of boxSelectors) {
-                            try {
-                                const handle = await page.$(sel)
-                                if (handle) {
-                                    const visible = await handle.isVisible()
-                                    if (visible) {
-                                        boxHandle = handle
-                                        break
-                                    }
-                                    await handle.dispose()
+                        await page.evaluate(`
+                            (function() {
+                                const el = document.elementFromPoint(${commentBtnInfo.x}, ${commentBtnInfo.y});
+                                if (el) {
+                                    const button = el.closest('[role="button"]') || el;
+                                    button.click();
                                 }
+                            })()
+                        `)
+                        await page.waitForTimeout(2000)
+                    } catch (e) {
+                        try {
+                            await page.evaluate(`window.scrollBy({ top: 500, behavior: 'smooth' })`)
+                            await page.waitForTimeout(2000)
+                        } catch (se) { /* ignore */ }
+                        continue
+                    }
+
+                    // Get random comment template
+                    const randomTemplate = commentTemplates[Math.floor(Math.random() * commentTemplates.length)]
+                    const commentText = spinText(randomTemplate.text)
+
+                    // Find comment box using ISHBrowser API (same pattern as auto-comment handler)
+                    const commentBoxSelectors = [
+                        'div[role="textbox"][contenteditable="true"][data-lexical-editor="true"]',
+                        'div[role="textbox"][contenteditable="true"][aria-label*="Comment" i]',
+                        'div[role="textbox"][contenteditable="true"][aria-label*="comment" i]',
+                        'div[role="textbox"][contenteditable="true"][aria-label*="Komentar" i]',
+                        'div[role="textbox"][contenteditable="true"][placeholder*="Write" i]',
+                        'div[role="textbox"][contenteditable="true"]',
+                        '[role="textbox"][contenteditable="true"]'
+                    ]
+
+                    let boxFound = false
+                    let activeBoxSelector = null
+                    const MAX_RETRIES = 3
+
+                    for (let retry = 1; retry <= MAX_RETRIES; retry++) {
+                        sendProgress({ status: 'finding', message: `🔍 Looking for comment box (attempt ${retry}/${MAX_RETRIES})...` })
+
+                        for (const sel of commentBoxSelectors) {
+                            try {
+                                await page.waitForSelector(sel, 3000)
+                                await page.click(sel)
+                                activeBoxSelector = sel
+                                boxFound = true
+                                break
                             } catch (e) { continue }
                         }
 
-                        if (!boxHandle) {
-                            commentFailCount++
-                            await closeCommentPopup(page)
-                            if (commentFailCount >= 3) break
-                            await page.mouse.wheel(0, 600)
+                        if (boxFound) break
+
+                        // If not found, scroll slightly and re-click comment button
+                        if (retry < MAX_RETRIES) {
+                            try {
+                                await page.evaluate(`window.scrollBy(0, 300)`)
+                                await page.waitForTimeout(2000)
+                                // Re-click comment button
+                                await page.evaluate(`
+                                    (function() {
+                                        const el = document.elementFromPoint(${commentBtnInfo.x}, ${commentBtnInfo.y});
+                                        if (el) {
+                                            const button = el.closest('[role="button"]') || el;
+                                            button.click();
+                                        }
+                                    })()
+                                `)
+                                await page.waitForTimeout(2000)
+                            } catch (e) { /* ignore */ }
+                        }
+                    }
+
+                    // Fallback: scroll down and retry (same as auto-comment handler)
+                    if (!boxFound) {
+                        try {
+                            await page.evaluate(`window.scrollTo(0, document.body.scrollHeight)`)
                             await page.waitForTimeout(2000)
-                            continue
+                            for (const sel of commentBoxSelectors) {
+                                try {
+                                    await page.waitForSelector(sel, 2000)
+                                    await page.click(sel)
+                                    activeBoxSelector = sel
+                                    boxFound = true
+                                    break
+                                } catch (e) { continue }
+                            }
+                        } catch (e) { /* ignore */ }
+                    }
+
+                    if (!boxFound) {
+                        commentFailCount++
+                        console.log(`[FeedEngagement] Comment box NOT FOUND (Failure ${commentFailCount}/${MAX_CONSECUTIVE_FAILURES})`)
+                        sendProgress({ status: 'warning', message: `⚠️ Comment box not found (${commentFailCount}/${MAX_CONSECUTIVE_FAILURES})` })
+                        await closeCommentPopup(page)
+
+                        if (commentFailCount >= MAX_CONSECUTIVE_FAILURES) {
+                            sendProgress({ status: 'failed', message: `❌ Comment box not found ${MAX_CONSECUTIVE_FAILURES} times in a row, stopping comment phase` })
+                            break
                         }
 
-                        commentFailCount = 0
-                        await boxHandle.click()
-                        await page.waitForTimeout(500)
+                        try {
+                            await page.evaluate(`window.scrollBy({ top: 600, behavior: 'smooth' })`)
+                            await page.waitForTimeout(2500)
+                        } catch (e) { /* ignore */ }
+                        continue
+                    }
 
-                        // Type comment
+                    // Comment box FOUND — reset fail count
+                    commentFailCount = 0
+
+                    try {
+                        // Clear and type comment (same pattern as auto-comment handler)
+                        await page.waitForTimeout(500)
+                        await page.focus(activeBoxSelector)
+                        await page.waitForTimeout(300)
                         await page.keyboard.shortcut(['Control', 'a'])
                         await page.keyboard.press('Backspace')
                         await page.waitForTimeout(300)
 
-                        const chunkSize = 10
-                        for (let i = 0; i < commentText.length; i += chunkSize) {
-                            const chunk = commentText.substring(i, Math.min(i + chunkSize, commentText.length))
-                            await page.keyboard.type(chunk, 30)
-                            await page.waitForTimeout(100 + Math.random() * 200)
+                        // Multi-line support: split by \n and use Shift+Enter for new lines
+                        const lines = commentText.split('\n')
+                        for (let i = 0; i < lines.length; i++) {
+                            if (lines[i].length > 0) {
+                                const line = lines[i]
+                                const chunkSize = 20
+                                for (let c = 0; c < line.length; c += chunkSize) {
+                                    const chunk = line.substring(c, Math.min(c + chunkSize, line.length))
+                                    await page.keyboard.type(chunk, 30)
+                                    await page.waitForTimeout(50 + Math.random() * 100)
+                                }
+                            }
+                            if (i < lines.length - 1) {
+                                await page.keyboard.shortcut(['Shift', 'Enter'])
+                                await page.waitForTimeout(150)
+                            }
                         }
                         await page.waitForTimeout(800)
-                        await boxHandle.dispose()
 
-                        // Upload image if provided
+                        // Upload image if template has one (same as auto-comment handler)
                         if (randomTemplate.imagePath && fs.existsSync(randomTemplate.imagePath)) {
+                            console.log(`[FeedEngagement] Uploading image: ${path.basename(randomTemplate.imagePath)}`)
                             try {
-                                await page.upload('input[type="file"]', randomTemplate.imagePath)
-                                await page.waitForTimeout(3000)
-                            } catch (e) { /* optional */ }
+                                const fileInputCount = await page.evaluate(`document.querySelectorAll('input[type="file"]').length`)
+                                if (fileInputCount > 0) {
+                                    const targetIndex = fileInputCount > 1 ? 1 : 0
+                                    await page.uploadByIndex('input[type="file"]', targetIndex, randomTemplate.imagePath)
+                                    console.log(`[FeedEngagement] Image uploaded to input[${targetIndex}] of ${fileInputCount}`)
+                                    await page.waitForTimeout(3000)
+                                }
+                            } catch (uploadErr) {
+                                console.log('[FeedEngagement] Image upload failed:', uploadErr.message)
+                            }
                         }
 
-                        // Submit
-                        await submitComment(page)
+                        // Submit comment (robust multi-strategy — same as auto-comment handler)
+                        await page.waitForTimeout(500)
+                        await submitComment(page, activeBoxSelector)
                         await page.waitForTimeout(2500)
 
+                        // Mark as processed
+                        processedCommentAreas.add(commentBtnInfo.postArea)
                         commentCount++
                         actionCount++
-                        sendProgress({ status: 'commented', message: `💬 Comment #${commentCount}/${targetComments}: "${commentText.substring(0, 30)}..."`, likeCount, commentCount, targetLikes, targetComments })
+                        sendProgress({ status: 'commented', message: `💬 Comment #${commentCount}/${targetComments}: "${commentText.substring(0, 30)}..."` })
 
-                        // Close popup + scroll away
+                        // Close comment popup/dialog
                         await closeCommentPopup(page)
                         await page.waitForTimeout(1000)
 
-                        const bigScroll = 800 + Math.floor(Math.random() * 400)
-                        await page.mouse.wheel(0, bigScroll)
-                        await page.waitForTimeout(2000)
+                        // Random human scroll after each comment (same as scrip-old)
+                        await randomHumanScroll()
 
+                        // Random delay
                         const delay = Math.floor((delayMin + Math.random() * (delayMax - delayMin)) * 1000)
-                        sendProgress({ status: 'waiting', message: `⏱️ Waiting ${Math.round(delay / 1000)}s...`, likeCount, commentCount, targetLikes, targetComments })
+                        sendProgress({ status: 'waiting', message: `⏱️ Waiting ${Math.round(delay / 1000)}s...` })
                         await page.waitForTimeout(delay)
 
+                        // Rest time check
                         if (restAfter > 0 && actionCount > 0 && actionCount % restAfter === 0) {
-                            sendProgress({ status: 'resting', message: `💤 Resting ${restSeconds}s...`, likeCount, commentCount, targetLikes, targetComments })
+                            sendProgress({ status: 'resting', message: `💤 Resting ${restSeconds}s...` })
                             await page.waitForTimeout(restSeconds * 1000)
                         }
-                    } catch (e) {
+                    } catch (commentErr) {
+                        console.log('[FeedEngagement] Comment action error:', commentErr.message)
                         await closeCommentPopup(page)
-                        await page.mouse.wheel(0, 500)
-                        await page.waitForTimeout(2000)
+                        try {
+                            await page.evaluate(`window.scrollBy({ top: 500, behavior: 'smooth' })`)
+                            await page.waitForTimeout(2000)
+                        } catch (e) { /* ignore */ }
                     }
                 }
+
+                sendProgress({ status: 'phase-done', message: `✅ Comment phase done: ${commentCount}/${targetComments}` })
             }
 
+            // Final summary
+            sendProgress({ status: 'completed', message: `🎉 Done! ❤️${likeCount} likes 💬${commentCount} comments` })
             state[slot] = null
             runningSlots.delete(slot)
-            sendDone({ likeCount, commentCount, targetLikes, targetComments })
+            sendDone({ status: 'completed' })
             return { ok: true, likeCount, commentCount }
 
         } catch (err) {
+            console.error('[FeedEngagement] Main Loop Error:', err)
+            const errMsg = err ? (err.message || String(err)) : 'Unknown error'
+            sendDone({ status: 'error', error: errMsg })
+            return { ok: false, error: errMsg }
+        } finally {
             state[slot] = null
             runningSlots.delete(slot)
-            sendDone({ likeCount, commentCount, targetLikes, targetComments, error: err.message })
-            return { ok: false, error: err.message }
         }
     })
 
@@ -269,23 +531,108 @@ module.exports = function (getPage) {
     })
 }
 
-// Helper: submit comment
-async function submitComment(page) {
-    try { await page.click('[aria-label="Comment"][role="button"]') }
-    catch (e) {
-        try { await page.click('[aria-label="Komentar"][role="button"]') }
-        catch (e2) { await page.keyboard.press('Enter') }
+// ============================================================
+// Submit comment — robust multi-strategy (same as auto-comment handler)
+// ============================================================
+async function submitComment(page, activeBoxSelector) {
+    let submitted = false
+
+    // Try 1: Focused state composer submit button
+    if (!submitted) {
+        try {
+            await page.click('#focused-state-composer-submit [role="button"]')
+            submitted = true
+        } catch (e) { /* try next */ }
+    }
+
+    // Try 2: aria-label based submit buttons
+    const submitSelectors = [
+        '[aria-label="Comment"][role="button"]',
+        '[aria-label="Komentar"][role="button"]',
+        '[aria-label="Post"][role="button"]',
+        '[aria-label="Kirim"][role="button"]',
+        '[aria-label="Comment"]',
+        '[aria-label="Komentar"]',
+        '[aria-label="Post"]',
+    ]
+    if (!submitted) {
+        for (const sel of submitSelectors) {
+            try {
+                await page.click(sel)
+                submitted = true
+                break
+            } catch (e) { continue }
+        }
+    }
+
+    // Try 3: Evaluate to find a visible submit/comment button
+    if (!submitted) {
+        try {
+            submitted = await page.evaluate(`
+                (function() {
+                    const btns = document.querySelectorAll('[role="button"]');
+                    for (const btn of btns) {
+                        const label = (btn.getAttribute('aria-label') || '').toLowerCase();
+                        const text = (btn.textContent || '').trim().toLowerCase();
+                        if (label === 'comment' || label === 'komentar' || label === 'post' || label === 'kirim' ||
+                            text === 'comment' || text === 'komentar' || text === 'post' || text === 'kirim') {
+                            const rect = btn.getBoundingClientRect();
+                            if (rect.width > 0 && rect.height > 0) {
+                                btn.click();
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
+                })()
+            `)
+        } catch (e) { /* ignore */ }
+    }
+
+    // Try 4: Last resort — Enter key
+    if (!submitted) {
+        try {
+            if (activeBoxSelector) {
+                await page.focus(activeBoxSelector)
+            }
+            await page.keyboard.press('Enter')
+            submitted = true
+        } catch (e) { /* ignore */ }
     }
 }
 
-// Helper: close comment popup
+// ============================================================
+// Close comment popup — multi-strategy
+// ============================================================
 async function closeCommentPopup(page) {
+    // Try click Close button
     try { await page.click('div[aria-label="Close"][role="button"]') }
     catch (e) {
         try { await page.click('div[aria-label="Tutup"][role="button"]') }
-        catch (e2) { /* no close button */ }
+        catch (e2) {
+            // Try evaluate to find close button
+            try {
+                await page.evaluate(`
+                    (function() {
+                        const selectors = [
+                            '[role="button"][aria-label="Close"]',
+                            '[aria-label="Close"]',
+                            '[aria-label="Tutup"]',
+                            'div[aria-label="Close"]',
+                            'div[aria-label="Tutup"]'
+                        ];
+                        for (const selector of selectors) {
+                            const closeBtn = document.querySelector(selector);
+                            if (closeBtn) { closeBtn.click(); return; }
+                        }
+                    })()
+                `)
+            } catch (e3) { /* ignore */ }
+        }
     }
+
+    // Also press Escape multiple times as fallback
     for (let i = 0; i < 3; i++) {
-        try { await page.keyboard.press('Escape'); await page.waitForTimeout(300) } catch (e) { }
+        try { await page.keyboard.press('Escape'); await page.waitForTimeout(300) } catch (e) { /* ignore */ }
     }
 }

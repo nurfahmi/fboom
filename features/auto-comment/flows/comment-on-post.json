@@ -1,61 +1,145 @@
 [
-  { "action": "waitForTimeout", "args": [2000] },
-
-  {
-    "action": "click",
-    "args": ["[aria-label=\"Comment\"]"],
-    "fallback": {
-      "action": "click",
-      "args": ["div[role=\"textbox\"][contenteditable=\"true\"]"]
-    }
-  },
-
-  { "action": "waitForTimeout", "args": [1500] },
-
-  {
-    "action": "waitForSelector",
-    "args": ["div[role=\"textbox\"][contenteditable=\"true\"]", 5000],
-    "optional": true
-  },
-
-  {
-    "action": "focus",
-    "args": ["div[role=\"textbox\"][contenteditable=\"true\"]"]
-  },
-
-  { "action": "waitForTimeout", "args": [300] },
-
-  { "action": "keyboard.shortcut", "args": [["Control", "a"]] },
-  { "action": "keyboard.press", "args": ["Backspace"] },
-  { "action": "keyboard.type", "args": ["{{commentText}}", 50] },
-
-  { "action": "waitForTimeout", "args": [500] },
-
-  {
-    "action": "upload",
-    "args": ["[role=\"dialog\"] [role=\"table\"] input[type=\"file\"]", "{{imagePath}}"],
-    "if": "{{imagePath}}",
-    "optional": true
-  },
-
   {
     "action": "waitForTimeout",
-    "args": [3000],
-    "if": "{{imagePath}}"
+    "args": [
+      2000
+    ]
   },
-
   {
     "action": "click",
-    "args": ["#focused-state-composer-submit [role=\"button\"]"],
+    "args": [
+      "[aria-label=\"Comment\"]"
+    ],
     "fallback": {
       "action": "click",
-      "args": ["[aria-label=\"Comment\"]"],
+      "args": [
+        "[aria-label=\"Komentar\"]"
+      ],
       "fallback": {
-        "action": "keyboard.press",
-        "args": ["Enter"]
+        "action": "click",
+        "args": [
+          "div[role=\"textbox\"][contenteditable=\"true\"]"
+        ]
       }
     }
   },
-
-  { "action": "waitForTimeout", "args": [3000] }
+  {
+    "action": "waitForTimeout",
+    "args": [
+      2000
+    ]
+  },
+  {
+    "action": "waitForSelector",
+    "args": [
+      "div[role=\"textbox\"][contenteditable=\"true\"][data-lexical-editor=\"true\"]",
+      5000
+    ],
+    "optional": true
+  },
+  {
+    "action": "click",
+    "args": [
+      "div[role=\"textbox\"][contenteditable=\"true\"][data-lexical-editor=\"true\"]"
+    ],
+    "fallback": {
+      "action": "click",
+      "args": [
+        "div[role=\"textbox\"][contenteditable=\"true\"]"
+      ]
+    }
+  },
+  {
+    "action": "waitForTimeout",
+    "args": [
+      500
+    ]
+  },
+  {
+    "action": "focus",
+    "args": [
+      "div[role=\"textbox\"][contenteditable=\"true\"]"
+    ]
+  },
+  {
+    "action": "keyboard.shortcut",
+    "args": [
+      [
+        "Control",
+        "a"
+      ]
+    ]
+  },
+  {
+    "action": "keyboard.press",
+    "args": [
+      "Backspace"
+    ]
+  },
+  {
+    "action": "waitForTimeout",
+    "args": [
+      300
+    ]
+  },
+  {
+    "action": "typeMultiline",
+    "args": [
+      "{{commentText}}",
+      30
+    ],
+    "comment": "Types text with Shift+Enter for line breaks"
+  },
+  {
+    "action": "waitForTimeout",
+    "args": [
+      800
+    ]
+  },
+  {
+    "action": "upload",
+    "args": [
+      "input[type=\"file\"]",
+      "{{imagePath}}"
+    ],
+    "if": "{{imagePath}}",
+    "optional": true
+  },
+  {
+    "action": "waitForTimeout",
+    "args": [
+      5000
+    ],
+    "if": "{{imagePath}}"
+  },
+  {
+    "action": "click",
+    "args": [
+      "#focused-state-composer-submit [role=\"button\"]"
+    ],
+    "fallback": {
+      "action": "click",
+      "args": [
+        "[aria-label=\"Comment\"][role=\"button\"]"
+      ],
+      "fallback": {
+        "action": "click",
+        "args": [
+          "[aria-label=\"Komentar\"][role=\"button\"]"
+        ],
+        "fallback": {
+          "action": "keyboard.press",
+          "args": [
+            "Enter"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "action": "waitForTimeout",
+    "args": [
+      3000
+    ]
+  }
 ]

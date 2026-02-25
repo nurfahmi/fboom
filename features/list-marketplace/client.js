@@ -415,7 +415,7 @@ window.api.on('mp-progress', (slot, info) => {
     renderMpTable()
 
     const msgs = {
-        posting: `🔄 Posting: ${info.productName} (${info.index + 1}/${info.total})`,
+        posting: `🔄 Posting: ${info.productName} (${info.index + 1}/${info.total}) ${info.detail ? '- ' + info.detail : ''}`,
         success: `✅ ${info.productName} posted (${info.successCount}/${info.total})`,
         error: `❌ ${info.productName}: ${info.error || 'failed'}`,
         waiting: `⏳ Waiting ${info.delay}s before next...`,
