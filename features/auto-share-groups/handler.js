@@ -2,6 +2,12 @@
 const fs = require('fs')
 const path = require('path')
 
+// Helper for safe IPC communication
+const safeSend = (sender, channel, ...args) => {
+    if (!sender || sender.isDestroyed()) return
+    try { sender.send(channel, ...args) } catch (err) { console.error('[IPC Error]', err.message) }
+}
+
 // Spin text: {{option1|option2|option3}} → random pick
 function spinText(text) {
     if (!text) return text
@@ -13,6 +19,19 @@ function spinText(text) {
 
 module.exports = function (getPage) {
     const state = {} // per-slot state
+
+    // Interruptible wait — checks stop flag every 500ms so Stop takes effect quickly
+    const interruptibleWait = async (page, ms, slot) => {
+        const interval = 500
+        let waited = 0
+        while (waited < ms) {
+            if (!state[slot] || !state[slot].running) return false
+            const chunk = Math.min(interval, ms - waited)
+            await page.waitForTimeout(chunk)
+            waited += chunk
+        }
+        return true
+    }
 
     ipcMain.handle('start-auto-share-groups', async (e, slot, config) => {
         const page = getPage(slot)
@@ -26,19 +45,12 @@ module.exports = function (getPage) {
         let successCount = 0
         let failCount = 0
 
-        const sendProgress = (data) => {
-            try {
-                if (e.sender && !e.sender.isDestroyed()) {
-                    e.sender.send('share-groups-progress', slot, data)
-                }
-            } catch (err) { }
-        }
-
         for (let i = 0; i < groups.length; i++) {
             if (!state[slot] || !state[slot].running) break
+            if (e.sender.isDestroyed()) break
 
             const group = groups[i]
-            sendProgress({ index: i, status: 'processing', total: groups.length, groupName: group.name, successCount, failCount })
+            safeSend(e.sender, 'share-groups-progress', slot, { index: i, status: 'processing', total: groups.length, groupName: group.name, successCount, failCount })
 
             try {
                 const finalTitle = spinText(title)
@@ -47,45 +59,48 @@ module.exports = function (getPage) {
 
                 if (success) {
                     successCount++
-                    sendProgress({ index: i, status: 'success', total: groups.length, groupName: group.name, successCount, failCount })
+                    safeSend(e.sender, 'share-groups-progress', slot, { index: i, status: 'success', total: groups.length, groupName: group.name, successCount, failCount })
                 } else {
                     failCount++
-                    sendProgress({ index: i, status: 'error', error: 'Failed to share', total: groups.length, groupName: group.name, successCount, failCount })
+                    safeSend(e.sender, 'share-groups-progress', slot, { index: i, status: 'error', error: 'Failed to share', total: groups.length, groupName: group.name, successCount, failCount })
                 }
             } catch (err) {
                 failCount++
-                sendProgress({ index: i, status: 'error', error: err.message, total: groups.length, groupName: group.name, successCount, failCount })
+                safeSend(e.sender, 'share-groups-progress', slot, { index: i, status: 'error', error: err.message, total: groups.length, groupName: group.name, successCount, failCount })
             }
 
-            // Delay between shares
+            // Delay between shares (interruptible)
             if (i < groups.length - 1 && state[slot] && state[slot].running) {
                 const delay = (delayMin + Math.random() * (delayMax - delayMin)) * 1000
-                sendProgress({ index: i, status: 'waiting', delay: Math.round(delay / 1000), total: groups.length, successCount, failCount })
-                await page.waitForTimeout(delay)
+                safeSend(e.sender, 'share-groups-progress', slot, { index: i, status: 'waiting', delay: Math.round(delay / 1000), total: groups.length, successCount, failCount })
+                const continued = await interruptibleWait(page, delay, slot)
+                if (!continued) break
 
                 // Rest time
                 if (restAfter > 0 && (i + 1) % restAfter === 0) {
-                    sendProgress({ index: i, status: 'resting', restSeconds, total: groups.length, successCount, failCount })
-                    await page.waitForTimeout(restSeconds * 1000)
+                    safeSend(e.sender, 'share-groups-progress', slot, { index: i, status: 'resting', restSeconds, total: groups.length, successCount, failCount })
+                    const restContinued = await interruptibleWait(page, restSeconds * 1000, slot)
+                    if (!restContinued) break
                 }
             }
         }
 
         state[slot] = null
-        runningSlots.delete(slot)
 
         // Safety guard for the final 'done' message
-        try {
-            if (e.sender && !e.sender.isDestroyed()) {
-                e.sender.send('share-groups-done', slot, { successCount, failCount, total: groups.length })
-            }
-        } catch (err) { console.error('[AutoShare] IPC final send failed:', err.message) }
+        safeSend(e.sender, 'share-groups-done', slot, { successCount, failCount, total: groups.length })
 
         return { ok: true, successCount, failCount }
     })
 
     ipcMain.handle('stop-auto-share-groups', (e, slot) => {
-        if (state[slot]) state[slot].running = false
+        if (state[slot]) {
+            state[slot].running = false
+            state[slot] = null
+        }
+        if (!e.sender.isDestroyed()) {
+            safeSend(e.sender, 'share-groups-done', slot, { successCount: 0, failCount: 0, total: 0, stopped: true })
+        }
         return { ok: true }
     })
 

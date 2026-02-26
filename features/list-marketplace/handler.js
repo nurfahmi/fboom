@@ -21,6 +21,19 @@ function writeGlobalProducts(products) {
 module.exports = function (getPage) {
     const state = {}
 
+    // Interruptible wait — checks stop flag every 500ms so Stop takes effect quickly
+    const interruptibleWait = async (page, ms, slot) => {
+        const interval = 500
+        let waited = 0
+        while (waited < ms) {
+            if (!state[slot] || !state[slot].running) return false
+            const chunk = Math.min(interval, ms - waited)
+            await page.waitForTimeout(chunk)
+            waited += chunk
+        }
+        return true
+    }
+
     // ===== GLOBAL MARKETPLACE TABLE =====
     ipcMain.handle('get-global-mp-products', () => {
         return { ok: true, products: readGlobalProducts() }
@@ -125,15 +138,17 @@ module.exports = function (getPage) {
                 e.sender.send('mp-progress', slot, { index: i, status: 'error', productId: product.id, productName: product.name, error: err.message, total: products.length, successCount, failCount })
             }
 
-            // Delay between products
+            // Delay between products (interruptible)
             if (i < products.length - 1 && state[slot] && state[slot].running) {
                 const delay = (delayMin + Math.random() * (delayMax - delayMin)) * 1000
                 e.sender.send('mp-progress', slot, { index: i, status: 'waiting', productId: product.id, productName: product.name, delay: Math.round(delay / 1000), total: products.length, successCount, failCount })
-                await page.waitForTimeout(delay)
+                const continued = await interruptibleWait(page, delay, slot)
+                if (!continued) break
 
                 if (restAfter > 0 && (i + 1) % restAfter === 0) {
                     e.sender.send('mp-progress', slot, { index: i, status: 'resting', productId: product.id, productName: product.name, restSeconds, total: products.length, successCount, failCount })
-                    await page.waitForTimeout(restSeconds * 1000)
+                    const restContinued = await interruptibleWait(page, restSeconds * 1000, slot)
+                    if (!restContinued) break
                 }
             }
         }
@@ -144,7 +159,13 @@ module.exports = function (getPage) {
     })
 
     ipcMain.handle('stop-list-marketplace', (e, slot) => {
-        if (state[slot]) state[slot].running = false
+        if (state[slot]) {
+            state[slot].running = false
+            state[slot] = null
+        }
+        if (!e.sender.isDestroyed()) {
+            e.sender.send('mp-done', slot, { successCount: 0, failCount: 0, total: 0, stopped: true })
+        }
         return { ok: true }
     })
 

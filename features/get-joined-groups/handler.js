@@ -238,7 +238,12 @@ module.exports = function (getPage) {
   })
 
   ipcMain.handle('stop-get-groups', (e, slot) => {
-    if (scraping[slot]) scraping[slot].running = false
+    if (scraping[slot]) {
+      scraping[slot].running = false
+    }
+    if (!e.sender.isDestroyed()) {
+      e.sender.send('groups-done', slot)
+    }
     return { ok: true }
   })
 

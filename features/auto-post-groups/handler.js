@@ -14,6 +14,19 @@ function spinText(text) {
 module.exports = function (getPage) {
     const state = {} // per-slot state
 
+    // Interruptible wait — checks stop flag every 500ms so Stop takes effect quickly
+    const interruptibleWait = async (page, ms, slot) => {
+        const interval = 500
+        let waited = 0
+        while (waited < ms) {
+            if (!state[slot] || !state[slot].running) return false // stopped
+            const chunk = Math.min(interval, ms - waited)
+            await page.waitForTimeout(chunk)
+            waited += chunk
+        }
+        return true // completed without stop
+    }
+
     ipcMain.handle('start-auto-post-groups', async (e, slot, config) => {
         const page = getPage(slot)
         if (!page) return { ok: false, error: 'No browser open' }
@@ -60,19 +73,21 @@ module.exports = function (getPage) {
                 }
             }
 
-            // Delay between posts
+            // Delay between posts (interruptible)
             if (i < groups.length - 1 && state[slot] && state[slot].running) {
                 const delay = (delayMin + Math.random() * (delayMax - delayMin)) * 1000
                 if (!e.sender.isDestroyed()) {
                     e.sender.send('post-groups-progress', slot, { index: i, status: 'waiting', delay: Math.round(delay / 1000), total: groups.length, successCount, failCount })
                 }
-                await page.waitForTimeout(delay)
+                const continued = await interruptibleWait(page, delay, slot)
+                if (!continued) break
 
                 if (restAfter > 0 && (i + 1) % restAfter === 0) {
                     if (!e.sender.isDestroyed()) {
                         e.sender.send('post-groups-progress', slot, { index: i, status: 'resting', restSeconds, total: groups.length, successCount, failCount })
                     }
-                    await page.waitForTimeout(restSeconds * 1000)
+                    const restContinued = await interruptibleWait(page, restSeconds * 1000, slot)
+                    if (!restContinued) break
                 }
             }
         }
@@ -84,7 +99,13 @@ module.exports = function (getPage) {
     })
 
     ipcMain.handle('stop-auto-post-groups', (e, slot) => {
-        if (state[slot]) state[slot].running = false
+        if (state[slot]) {
+            state[slot].running = false
+            state[slot] = null
+        }
+        if (!e.sender.isDestroyed()) {
+            e.sender.send('post-groups-done', slot, { successCount: 0, failCount: 0, total: 0, stopped: true })
+        }
         return { ok: true }
     })
 
@@ -136,48 +157,214 @@ async function createGroupPost(page, title, postText, filePaths) {
     await page.waitForTimeout(3000)
 
     // STEP 1: Click "Write something..." button
-    try { await page.clickByXpath("//div[@role='button']//span[contains(text(),'Write something')]") }
-    catch (e) {
-        try { await page.clickByXpath("//div[@role='button']//span[contains(text(),'Tulis sesuatu')]") }
-        catch (e2) {
-            try { await page.click('div[role="button"][tabindex="0"]') }
-            catch (e3) { return false }
-        }
+    console.log('[CreateGroupPost] STEP 1: Opening composer...')
+    let composerOpened = false
+    const composerSelectors = [
+        "//div[@role='button']//span[contains(text(),'Write something')]",
+        "//div[@role='button']//span[contains(text(),'Tulis sesuatu')]",
+        "//div[@role='button']//span[contains(text(),'Create a public post')]",
+    ]
+    for (const xpath of composerSelectors) {
+        try {
+            await page.clickByXpath(xpath)
+            composerOpened = true
+            console.log('[CreateGroupPost] Composer opened via: ' + xpath)
+            break
+        } catch (e) { continue }
+    }
+    if (!composerOpened) {
+        try { await page.click('div[role="button"][tabindex="0"]'); composerOpened = true }
+        catch (e3) { return false }
     }
     await page.waitForTimeout(5000)
 
     // STEP 2: Upload files if provided
+    // IMPORTANT: The file input inside the composer popup has accept="image/*,...,video/*,..."
+    // We must use a specific selector to avoid targeting file inputs OUTSIDE the popup!
+    // The correct selector is: input[type="file"][accept*="video"] (unique to the popup media input)
     if (filePaths && Array.isArray(filePaths) && filePaths.length > 0) {
         const existingFiles = filePaths.filter(f => fs.existsSync(f))
         if (existingFiles.length > 0) {
+            console.log(`[CreateGroupPost] STEP 2: Uploading ${existingFiles.length} file(s)...`)
             await page.waitForTimeout(2000)
 
-            // Reliability Fix: Count file inputs and use uploadByIndex (matching scrip-old logic)
-            const inputs = await page.$$('input[type="file"]')
-            const inputCount = inputs.length
+            // The popup file input selector — this is SPECIFIC to the composer popup
+            // The popup's input has: accept="image/*,image/heif,image/heic,video/*,video/mp4,..."
+            // Using [accept*="video"] ensures we only target the popup's media input, not other inputs on the page
+            const POPUP_FILE_INPUT = 'input[type="file"][accept*="video"]'
 
-            if (inputCount > 0) {
-                console.log(`[CreateGroupPost] Found ${inputCount} file inputs, using index 0 for group post`)
-                for (const filePath of existingFiles) {
-                    try {
-                        await page.uploadByIndex(0, filePath)
-                        await page.waitForTimeout(1500)
-                    } catch (e) {
-                        console.error(`[CreateGroupPost] Upload failed for ${filePath}:`, e)
-                        continue
+            let uploadSuccess = false
+
+            // ============================================================
+            // STRATEGY A (PRIMARY): interceptFileChooser + click Photo/video button
+            // This is the most reliable method — mimics what a real user does.
+            // The Photo/video button is inside the popup with aria-label="Photo/video"
+            // ============================================================
+            console.log('[CreateGroupPost] Strategy A: interceptFileChooser + Photo/video click...')
+            try {
+                for (let i = 0; i < existingFiles.length; i++) {
+                    const filePath = existingFiles[i]
+                    const fileName = path.basename(filePath)
+                    console.log(`[CreateGroupPost] Intercepting for file ${i + 1}/${existingFiles.length}: ${fileName}`)
+
+                    // Set up interceptor BEFORE clicking the button
+                    await page.interceptFileChooser(filePath, { accept: true })
+
+                    // Click Photo/Video button inside the popup to trigger the file dialog
+                    let triggered = false
+                    const photoSelectors = [
+                        'div[aria-label="Photo/video"][role="button"]',
+                        'div[aria-label="Foto/video"][role="button"]',
+                        'div[aria-label="Photo/video"]',
+                        'div[aria-label="Foto/video"]',
+                    ]
+                    for (const sel of photoSelectors) {
+                        try {
+                            await page.click(sel)
+                            triggered = true
+                            console.log(`[CreateGroupPost] ✅ Clicked Photo/video: ${sel}`)
+                            break
+                        } catch (e) { continue }
                     }
+
+                    // Fallback: try XPath for Photo/video button
+                    if (!triggered) {
+                        const xpathSelectors = [
+                            "//div[@role='button'][@aria-label='Photo/video']",
+                            "//div[@role='button'][@aria-label='Foto/video']",
+                        ]
+                        for (const xp of xpathSelectors) {
+                            try {
+                                await page.clickByXpath(xp)
+                                triggered = true
+                                console.log(`[CreateGroupPost] ✅ Clicked Photo/video via XPath: ${xp}`)
+                                break
+                            } catch (e) { continue }
+                        }
+                    }
+
+                    // Fallback: JS evaluate to find Photo/video button
+                    if (!triggered) {
+                        try {
+                            triggered = await page.evaluate(`
+                                (function() {
+                                    const btns = document.querySelectorAll('div[role="button"]');
+                                    for (const btn of btns) {
+                                        const label = (btn.getAttribute('aria-label') || '').toLowerCase();
+                                        if (label === 'photo/video' || label === 'foto/video') {
+                                            btn.scrollIntoView({ block: 'center' });
+                                            btn.click();
+                                            return true;
+                                        }
+                                    }
+                                    return false;
+                                })()
+                            `)
+                            if (triggered) console.log('[CreateGroupPost] ✅ Clicked Photo/video via JS evaluate')
+                        } catch (e) { /* ignore */ }
+                    }
+
+                    if (triggered) {
+                        // Wait for file chooser to be intercepted
+                        await page.waitForTimeout(3000)
+                        uploadSuccess = true
+                        console.log(`[CreateGroupPost] ✅ File ${fileName} provided via interceptor`)
+                    } else {
+                        console.log('[CreateGroupPost] ⚠️ Photo/video button not found for interceptor')
+                    }
+
+                    await page.stopInterceptFileChooser()
+                    await page.waitForTimeout(1500)
                 }
-            } else {
-                console.warn('[CreateGroupPost] No file input found for upload')
+            } catch (e) {
+                console.log(`[CreateGroupPost] Strategy A failed: ${e.message}`)
+                try { await page.stopInterceptFileChooser() } catch (e2) { }
             }
 
-            const waitTime = Math.min(2000 + (existingFiles.length * 1000), 10000)
+            // ============================================================
+            // STRATEGY B (FALLBACK): Direct upload to popup file input
+            // Use the SPECIFIC selector: input[type="file"][accept*="video"]
+            // This targets ONLY the file input inside the composer popup
+            // ============================================================
+            if (!uploadSuccess) {
+                console.log('[CreateGroupPost] Strategy B: Direct upload to popup file input...')
+                try {
+                    // Check if the popup-specific file input exists
+                    const popupInputCount = await page.evaluate(`document.querySelectorAll('${POPUP_FILE_INPUT}').length`)
+                    console.log(`[CreateGroupPost] Popup file inputs found: ${popupInputCount}`)
+
+                    if (popupInputCount > 0) {
+                        for (let i = 0; i < existingFiles.length; i++) {
+                            const filePath = existingFiles[i]
+                            const fileName = path.basename(filePath)
+                            console.log(`[CreateGroupPost] Direct uploading to popup input: ${fileName}`)
+                            await page.upload(POPUP_FILE_INPUT, filePath)
+                            console.log(`[CreateGroupPost] ✅ Uploaded ${fileName} via popup input`)
+                            await page.waitForTimeout(2000 + Math.random() * 1000)
+                        }
+                        uploadSuccess = true
+                    } else {
+                        // Try clicking Photo/video first to reveal the input, then upload
+                        console.log('[CreateGroupPost] No popup input found, clicking Photo/video to reveal it...')
+                        let photoClicked = false
+                        try { await page.click('div[aria-label="Photo/video"]'); photoClicked = true } catch (e) {
+                            try { await page.click('div[aria-label="Foto/video"]'); photoClicked = true } catch (e2) { }
+                        }
+                        if (photoClicked) {
+                            await page.waitForTimeout(3000)
+                            const newCount = await page.evaluate(`document.querySelectorAll('${POPUP_FILE_INPUT}').length`)
+                            if (newCount > 0) {
+                                for (let i = 0; i < existingFiles.length; i++) {
+                                    const filePath = existingFiles[i]
+                                    const fileName = path.basename(filePath)
+                                    await page.upload(POPUP_FILE_INPUT, filePath)
+                                    console.log(`[CreateGroupPost] ✅ Uploaded ${fileName} after Photo/video click`)
+                                    await page.waitForTimeout(2000 + Math.random() * 1000)
+                                }
+                                uploadSuccess = true
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.log(`[CreateGroupPost] Strategy B failed: ${e.message}`)
+                }
+            }
+
+            // ============================================================
+            // STRATEGY C (LAST RESORT): uploadByIndex with popup-specific selector
+            // ============================================================
+            if (!uploadSuccess) {
+                console.log('[CreateGroupPost] Strategy C: uploadByIndex to popup input...')
+                try {
+                    for (let i = 0; i < existingFiles.length; i++) {
+                        const filePath = existingFiles[i]
+                        const fileName = path.basename(filePath)
+                        await page.uploadByIndex(POPUP_FILE_INPUT, 0, filePath)
+                        console.log(`[CreateGroupPost] ✅ uploadByIndex for ${fileName}`)
+                        await page.waitForTimeout(2000)
+                    }
+                    uploadSuccess = true
+                } catch (e) {
+                    console.log(`[CreateGroupPost] ❌ Strategy C failed: ${e.message}`)
+                }
+            }
+
+            if (!uploadSuccess) {
+                console.log('[CreateGroupPost] ❌ ALL upload strategies failed!')
+            }
+
+            // Wait for uploads to process
+            const waitTime = Math.min(3000 + (existingFiles.length * 1500), 12000)
+            console.log(`[CreateGroupPost] Waiting ${waitTime / 1000}s for upload processing...`)
             await page.waitForTimeout(waitTime)
         }
+    } else {
+        console.log('[CreateGroupPost] STEP 2: No files to upload')
     }
 
     // STEP 3: Type title and caption
     // Flow: click textbox → type title → Tab → type caption
+    console.log('[CreateGroupPost] STEP 3: Typing title and caption...')
     if ((title && title.trim()) || (postText && postText.trim())) {
         // Use page.evaluate to find and focus the caption textbox
         let captionFocused = false
@@ -185,18 +372,22 @@ async function createGroupPost(page, title, postText, filePaths) {
             captionFocused = await page.evaluate(`
                 (function () {
                     const selectors = [
+                        '[aria-placeholder*="Create a public post"]',
+                        '[aria-placeholder*="Tulis sesuatu"]',
                         '[aria-placeholder*="Create your post"]',
-                        '[aria-placeholder="Create your post..."]',
-                        '[aria-placeholder="Create your pohst..."]'
+                        '[role="textbox"][aria-label*="post"]',
+                        '[contenteditable="true"]'
                     ];
 
                     for (const sel of selectors) {
                         try {
-                            const el = document.querySelector(sel);
-                            if (el) {
-                                el.click();
-                                el.focus();
-                                return true;
+                            const els = document.querySelectorAll(sel);
+                            for (const el of els) {
+                                if (el.offsetParent !== null) { // is visible
+                                    el.click();
+                                    el.focus();
+                                    return true;
+                                }
                             }
                         } catch (e) {}
                     }
@@ -226,7 +417,7 @@ async function createGroupPost(page, title, postText, filePaths) {
                         await page.waitForTimeout(100)
                     }
                 }
-                console.log('[CreateGroupPost] Title typed successfully')
+                console.log('[CreateGroupPost] ✅ Title typed successfully')
 
                 // Press Tab to move to caption field
                 await page.waitForTimeout(500)
@@ -246,17 +437,17 @@ async function createGroupPost(page, title, postText, filePaths) {
                         await page.waitForTimeout(100)
                     }
                 }
-                console.log('[CreateGroupPost] Caption typed successfully')
+                console.log('[CreateGroupPost] ✅ Caption typed successfully')
             }
 
             await page.waitForTimeout(1000)
         } else {
-            console.log('[CreateGroupPost] Caption textbox not found')
+            console.log('[CreateGroupPost] ⚠️ Caption textbox not found')
         }
     }
 
     // STEP 4: Click Post button
-    // Wait for the post button to be ready after caption
+    console.log('[CreateGroupPost] STEP 4: Clicking Post button...')
     await page.waitForTimeout(3000)
 
     let posted = false
@@ -273,7 +464,7 @@ async function createGroupPost(page, title, postText, filePaths) {
                 ];
                 for (const sel of selectors) {
                     const btn = document.querySelector(sel);
-                    if (btn) { btn.click(); return true; }
+                    if (btn && btn.offsetParent !== null) { btn.click(); return true; }
                 }
                 // Try span text match
                 const postTexts = ['Post', 'Kirim', 'Posting'];
@@ -315,6 +506,7 @@ async function createGroupPost(page, title, postText, filePaths) {
         }
     }
 
+    if (posted) console.log('[CreateGroupPost] ✅ Post button clicked')
     await page.waitForTimeout(5000)
     return posted
 }

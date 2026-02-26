@@ -15,6 +15,19 @@ module.exports = function (getPage) {
     const state = {} // per-slot state
     const runningSlots = new Set()
 
+    // Interruptible wait — checks stop flag every 500ms so Stop takes effect quickly
+    const iWait = async (page, ms, slot) => {
+        const interval = 500
+        let waited = 0
+        while (waited < ms) {
+            if (!state[slot] || !state[slot].running) return false
+            const chunk = Math.min(interval, ms - waited)
+            await page.waitForTimeout(chunk)
+            waited += chunk
+        }
+        return true
+    }
+
     ipcMain.handle('start-feed-engagement', async (e, slot, config) => {
         if (runningSlots.has(slot)) return { ok: false, error: 'Already running' }
 
@@ -169,15 +182,17 @@ module.exports = function (getPage) {
                                     // Random human scroll after each like (same as scrip-old)
                                     await randomHumanScroll()
 
-                                    // Random delay
+                                    // Random delay (interruptible)
                                     const delay = Math.floor((delayMin + Math.random() * (delayMax - delayMin)) * 1000)
                                     sendProgress({ status: 'waiting', message: `⏱️ Waiting ${Math.round(delay / 1000)}s...` })
-                                    await page.waitForTimeout(delay)
+                                    const continued = await iWait(page, delay, slot)
+                                    if (!continued) break
 
-                                    // Rest time check
+                                    // Rest time check (interruptible)
                                     if (restAfter > 0 && actionCount > 0 && actionCount % restAfter === 0) {
                                         sendProgress({ status: 'resting', message: `💤 Resting ${restSeconds}s...` })
-                                        await page.waitForTimeout(restSeconds * 1000)
+                                        const restCont = await iWait(page, restSeconds * 1000, slot)
+                                        if (!restCont) break
                                     }
 
                                     break // Process one like per scroll cycle
@@ -473,15 +488,17 @@ module.exports = function (getPage) {
                         // Random human scroll after each comment (same as scrip-old)
                         await randomHumanScroll()
 
-                        // Random delay
+                        // Random delay (interruptible)
                         const delay = Math.floor((delayMin + Math.random() * (delayMax - delayMin)) * 1000)
                         sendProgress({ status: 'waiting', message: `⏱️ Waiting ${Math.round(delay / 1000)}s...` })
-                        await page.waitForTimeout(delay)
+                        const continued = await iWait(page, delay, slot)
+                        if (!continued) break
 
-                        // Rest time check
+                        // Rest time check (interruptible)
                         if (restAfter > 0 && actionCount > 0 && actionCount % restAfter === 0) {
                             sendProgress({ status: 'resting', message: `💤 Resting ${restSeconds}s...` })
-                            await page.waitForTimeout(restSeconds * 1000)
+                            const restCont = await iWait(page, restSeconds * 1000, slot)
+                            if (!restCont) break
                         }
                     } catch (commentErr) {
                         console.log('[FeedEngagement] Comment action error:', commentErr.message)
@@ -515,8 +532,22 @@ module.exports = function (getPage) {
     })
 
     ipcMain.handle('stop-feed-engagement', (e, slot) => {
-        if (state[slot]) state[slot].running = false
+        if (state[slot]) {
+            state[slot].running = false
+            state[slot] = null
+        }
         runningSlots.delete(slot)
+        if (!e.sender.isDestroyed()) {
+            try {
+                e.sender.send('feed-engagement-done', String(slot), {
+                    status: 'stopped',
+                    likeCount: 0,
+                    commentCount: 0,
+                    targetLikes: 0,
+                    targetComments: 0
+                })
+            } catch (err) { /* ignore */ }
+        }
         return { ok: true }
     })
 

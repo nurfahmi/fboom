@@ -5,6 +5,19 @@ const path = require('path')
 module.exports = function (getPage) {
     const state = {} // per-slot state: { searching, joining }
 
+    // Interruptible wait — checks stop flag every 500ms so Stop takes effect quickly
+    const interruptibleWait = async (page, ms, slot, flagKey) => {
+        const interval = 500
+        let waited = 0
+        while (waited < ms) {
+            if (!state[slot] || !state[slot][flagKey]) return false
+            const chunk = Math.min(interval, ms - waited)
+            await page.waitForTimeout(chunk)
+            waited += chunk
+        }
+        return true
+    }
+
     // ========================
     // START SEARCH GROUPS
     // ========================
@@ -132,7 +145,9 @@ module.exports = function (getPage) {
     })
 
     ipcMain.handle('stop-search-groups', (e, slot) => {
-        if (state[slot]) state[slot].searching = false
+        if (state[slot]) {
+            state[slot].searching = false
+        }
         return { ok: true }
     })
 
@@ -177,15 +192,17 @@ module.exports = function (getPage) {
                 e.sender.send('join-groups-progress', slot, { index: i, status: 'error', error: err.message, total: groups.length, groupName: group.name, successCount, failCount })
             }
 
-            // Delay between joins
+            // Delay between joins (interruptible)
             if (i < groups.length - 1 && state[slot] && state[slot].joining) {
                 const delay = (delayMin + Math.random() * (delayMax - delayMin)) * 1000
                 e.sender.send('join-groups-progress', slot, { index: i, status: 'waiting', delay: Math.round(delay / 1000), total: groups.length, successCount, failCount })
-                await page.waitForTimeout(delay)
+                const continued = await interruptibleWait(page, delay, slot, 'joining')
+                if (!continued) break
 
                 if (restAfter > 0 && (i + 1) % restAfter === 0) {
                     e.sender.send('join-groups-progress', slot, { index: i, status: 'resting', restSeconds, total: groups.length, successCount, failCount })
-                    await page.waitForTimeout(restSeconds * 1000)
+                    const restContinued = await interruptibleWait(page, restSeconds * 1000, slot, 'joining')
+                    if (!restContinued) break
                 }
             }
         }
@@ -196,7 +213,12 @@ module.exports = function (getPage) {
     })
 
     ipcMain.handle('stop-join-groups', (e, slot) => {
-        if (state[slot]) state[slot].joining = false
+        if (state[slot]) {
+            state[slot].joining = false
+        }
+        if (!e.sender.isDestroyed()) {
+            e.sender.send('join-groups-done', slot, { successCount: 0, failCount: 0, total: 0, stopped: true })
+        }
         return { ok: true }
     })
 
