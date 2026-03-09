@@ -28,7 +28,7 @@ module.exports = function (getPage) {
     }
 
     ipcMain.handle('start-auto-post-groups', async (e, slot, config) => {
-        const page = getPage(slot)
+        const page = getPage(slot, e.sender)
         if (!page) return { ok: false, error: 'No browser open' }
 
         const { groups, title, postText, filePaths, delayMin, delayMax, restAfter, restSeconds } = config

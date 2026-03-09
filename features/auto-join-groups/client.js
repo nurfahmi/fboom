@@ -70,31 +70,45 @@ function renderJoinGroupsTable() {
     if (!tbody) return
 
     const filtered = data.groups.filter(g => g.name.toLowerCase().includes(filterVal))
-    if (countEl) countEl.textContent = `${filtered.length} / ${data.groups.length}`
+    const selectedCount = data.groups.filter(g => g._selected).length
+    if (countEl) countEl.textContent = `${selectedCount} selected / ${data.groups.length} total`
 
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" class="px-2 py-3 text-center text-gray-600">No groups. Search or load from TXT.</td></tr>'
+        tbody.innerHTML = '<tr><td colspan="5" class="px-2 py-3 text-center text-gray-600">No groups. Search or load from TXT.</td></tr>'
         return
     }
 
     tbody.innerHTML = filtered.map((g, idx) => {
+        const realIdx = data.groups.indexOf(g)
         let statusBadge = ''
         switch (g.status) {
-            case 'joined': statusBadge = '<span class="text-emerald-400">✓</span>'; break
-            case 'failed': statusBadge = '<span class="text-red-400">✕</span>'; break
-            case 'error': statusBadge = '<span class="text-red-400">✕</span>'; break
-            case 'joining': statusBadge = '<span class="text-yellow-400">⟳</span>'; break
-            case 'waiting': statusBadge = '<span class="text-blue-400">⏳</span>'; break
-            case 'resting': statusBadge = '<span class="text-purple-400">💤</span>'; break
-            default: statusBadge = '<span class="text-gray-600">—</span>'
+            case 'joined': statusBadge = '<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;background:rgba(34,197,94,0.15);color:#22c55e;">Joined</span>'; break
+            case 'failed': statusBadge = '<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;background:rgba(239,68,68,0.15);color:#ef4444;">Failed</span>'; break
+            case 'error': statusBadge = '<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;background:rgba(239,68,68,0.15);color:#ef4444;">Error</span>'; break
+            case 'joining': statusBadge = '<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;background:rgba(234,179,8,0.15);color:#eab308;">Joining...</span>'; break
+            default: statusBadge = '<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:600;background:transparent;color:#666;">Pending</span>'
         }
+        const checked = g._selected ? 'checked' : ''
         return `<tr class="border-b border-dark-100 hover:bg-dark-400/50">
+      <td class="px-1.5 py-1 text-center"><input type="checkbox" ${checked} onchange="toggleJgSelect(${realIdx}, this.checked)"></td>
       <td class="px-2 py-1 text-gray-500">${idx + 1}</td>
       <td class="px-2 py-1 text-gray-200 truncate max-w-[150px]" title="${g.name}">${g.name}</td>
       <td class="px-2 py-1 text-gray-400 font-mono text-[10px]">${g.groupId || g.id || ''}</td>
       <td class="px-2 py-1 text-center">${statusBadge}</td>
     </tr>`
     }).join('')
+}
+
+function toggleJgSelect(idx, checked) {
+    const data = _getCurJgData()
+    if (data.groups[idx]) data.groups[idx]._selected = checked
+    renderJoinGroupsTable()
+}
+
+function toggleJgSelectAll(checked) {
+    const data = _getCurJgData()
+    data.groups.forEach(g => g._selected = checked)
+    renderJoinGroupsTable()
 }
 
 // ========================
@@ -152,6 +166,8 @@ async function startSearchGroups() {
     const keyword = data.keyword
     if (!keyword) return setStatus('Please enter a keyword', 'error')
 
+    if (!acquireSlotLock(currentSlot, 'Auto Join Groups')) return
+
     jgSearching = true
     data.searching = true
     updateJoinGroupsButtons()
@@ -166,6 +182,7 @@ async function startSearchGroups() {
     await window.api.invoke('start-search-groups', currentSlot, config)
     jgSearching = false
     data.searching = false
+    releaseSlotLock(currentSlot, 'Auto Join Groups')
     updateJoinGroupsButtons()
 }
 
@@ -174,6 +191,7 @@ async function stopSearchGroups() {
     jgSearching = false
     const data = _getCurJgData()
     data.searching = false
+    releaseSlotLock(currentSlot, 'Auto Join Groups')
     updateJoinGroupsButtons()
     hideSearchStatus()
     setStatus('Search stopped.')
@@ -184,27 +202,30 @@ async function stopSearchGroups() {
 // ========================
 async function startJoinGroups() {
     const data = _getCurJgData()
-    if (data.groups.length === 0) return setStatus('No groups to join!', 'error')
+    const selected = data.groups.filter(g => g._selected)
+    if (selected.length === 0) return setStatus('Select groups first (use checkboxes)', 'error')
 
     _saveJgSlot(currentSlot)
 
-    // Reset statuses
-    data.groups.forEach(g => g.status = '')
+    if (!acquireSlotLock(currentSlot, 'Auto Join Groups')) return
+
+    // Reset statuses on selected
+    selected.forEach(g => g.status = '')
     renderJoinGroupsTable()
 
     jgJoining = true
     data.joining = true
     updateJoinGroupsButtons()
-    setStatus('Starting auto join groups...', 'info')
+    setStatus(`Starting auto join (${selected.length} groups)...`, 'info')
 
     // Save mapping from handler index to groupId before sending
     _jgIndexMap = {}
-    data.groups.forEach((g, i) => {
+    selected.forEach((g, i) => {
         _jgIndexMap[i] = g.groupId || g.id || g.name
     })
 
     const config = {
-        groups: data.groups,
+        groups: selected,
         delayMin: data.delayMin,
         delayMax: data.delayMax,
         restAfter: data.restAfter,
@@ -214,6 +235,7 @@ async function startJoinGroups() {
     await window.api.invoke('start-join-groups', currentSlot, config)
     jgJoining = false
     data.joining = false
+    releaseSlotLock(currentSlot, 'Auto Join Groups')
     updateJoinGroupsButtons()
 }
 
@@ -222,6 +244,7 @@ async function stopJoinGroups() {
     jgJoining = false
     const data = _getCurJgData()
     data.joining = false
+    releaseSlotLock(currentSlot, 'Auto Join Groups')
     updateJoinGroupsButtons()
     setStatus('Join stopped.')
 }
@@ -233,7 +256,7 @@ async function loadJoinGroupsTxt() {
     const result = await window.api.invoke('load-join-groups-txt')
     if (!result.ok) return
     const data = _getCurJgData()
-    data.groups = result.groups.map(g => ({ ...g, status: '' }))
+    data.groups = result.groups.map(g => ({ ...g, status: '', _selected: true }))
     renderJoinGroupsTable()
     setStatus(`Loaded ${data.groups.length} groups from TXT`)
 }
@@ -256,26 +279,37 @@ function clearJoinGroups() {
 // LISTEN TO SEARCH EVENTS
 // ========================
 window.api.on('join-groups-search-progress', (slot, info) => {
-    if (slot !== currentSlot) return
-    showSearchStatus(info.message || 'Searching...')
-    setStatus(info.message || 'Searching...', info.status === 'error' ? 'error' : 'info')
+    if (slot === currentSlot) showSearchStatus(info.message || 'Searching...')
+    setSlotStatus(slot, info.message || 'Searching...', info.status === 'error' ? 'error' : 'info')
 })
 
 window.api.on('join-groups-search-done', (slot, result) => {
-    if (slot !== currentSlot) return
-    jgSearching = false
-    const data = _getCurJgData()
-    data.searching = false
-    updateJoinGroupsButtons()
+    if (slot === currentSlot) {
+        jgSearching = false
+        const data = _getCurJgData()
+        data.searching = false
+        updateJoinGroupsButtons()
 
-    if (result.groups && result.groups.length > 0) {
-        data.groups = result.groups.map(g => ({ ...g, status: '' }))
-        renderJoinGroupsTable()
-        hideSearchStatus()
-        setStatus(`✅ Found ${result.total} groups!`, 'success')
+        if (result.groups && result.groups.length > 0) {
+            data.groups = result.groups.map(g => ({ ...g, status: '', _selected: true }))
+            renderJoinGroupsTable()
+            hideSearchStatus()
+        } else {
+            hideSearchStatus()
+        }
     } else {
-        hideSearchStatus()
-        setStatus('No groups found.', 'error')
+        if (_jgSlotData[slot]) {
+            _jgSlotData[slot].searching = false
+            if (result.groups && result.groups.length > 0) {
+                _jgSlotData[slot].groups = result.groups.map(g => ({ ...g, status: '', _selected: true }))
+            }
+        }
+    }
+    releaseSlotLock(slot, 'Auto Join Groups')
+    if (result.groups && result.groups.length > 0) {
+        setSlotStatus(slot, `✅ Found ${result.total} groups!`, 'success')
+    } else {
+        setSlotStatus(slot, 'No groups found.', 'error')
     }
 })
 
@@ -296,16 +330,17 @@ window.api.on('join-groups-progress', (slot, info) => {
             }
         }
     } else if (info.index !== undefined) {
-        // For non-joined statuses, update the status via the index map
-        const targetId = _jgIndexMap[info.index]
-        if (targetId) {
-            const group = data.groups.find(g => (g.groupId || g.id || g.name) === targetId)
-            if (group) group.status = info.status
+        // For non-joined statuses, update the status via the index map — but skip waiting/resting
+        if (info.status !== 'waiting' && info.status !== 'resting') {
+            const targetId = _jgIndexMap[info.index]
+            if (targetId) {
+                const group = data.groups.find(g => (g.groupId || g.id || g.name) === targetId)
+                if (group) group.status = info.status
+            }
         }
     }
 
-    if (slot !== currentSlot) return
-    renderJoinGroupsTable()
+    if (slot === currentSlot) renderJoinGroupsTable()
 
     const msgs = {
         joining: `🤝 Joining: ${info.groupName} (${info.index + 1}/${info.total})`,
@@ -315,14 +350,18 @@ window.api.on('join-groups-progress', (slot, info) => {
         waiting: `⏳ Waiting ${info.delay}s before next join...`,
         resting: `💤 Resting for ${info.restSeconds}s...`
     }
-    setStatus(msgs[info.status] || 'Processing...', (info.status === 'failed' || info.status === 'error') ? 'error' : 'info')
+    setSlotStatus(slot, msgs[info.status] || 'Processing...', (info.status === 'failed' || info.status === 'error') ? 'error' : 'info')
 })
 
 window.api.on('join-groups-done', (slot, summary) => {
-    if (slot !== currentSlot) return
-    jgJoining = false
-    const data = _getCurJgData()
-    data.joining = false
-    updateJoinGroupsButtons()
-    setStatus(`Done! ✅${summary.successCount} joined ❌${summary.failCount} failed / ${summary.total} groups`, 'success')
+    if (slot === currentSlot) {
+        jgJoining = false
+        const data = _getCurJgData()
+        data.joining = false
+        updateJoinGroupsButtons()
+    } else {
+        if (_jgSlotData[slot]) _jgSlotData[slot].joining = false
+    }
+    releaseSlotLock(slot, 'Auto Join Groups')
+    setSlotStatus(slot, `Done! ✅${summary.successCount} joined ❌${summary.failCount} failed / ${summary.total} groups`, 'success')
 })

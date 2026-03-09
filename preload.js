@@ -15,7 +15,7 @@ contextBridge.exposeInMainWorld('api', {
   reloadPage: (slot) => ipcRenderer.invoke('reload-page', slot),
   takeScreenshot: (slot) => ipcRenderer.invoke('take-screenshot', slot),
   closeBrowser: (slot) => ipcRenderer.invoke('close-browser', slot),
-  expandSlot: (slot) => ipcRenderer.invoke('expand-slot', slot),
+  expandSlot: (slot, width) => ipcRenderer.invoke('expand-slot', slot, width),
   collapseAll: () => ipcRenderer.invoke('collapse-all'),
   onAllOpened: (cb) => ipcRenderer.on('all-opened', cb)
 })

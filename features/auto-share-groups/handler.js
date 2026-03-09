@@ -34,7 +34,7 @@ module.exports = function (getPage) {
     }
 
     ipcMain.handle('start-auto-share-groups', async (e, slot, config) => {
-        const page = getPage(slot)
+        const page = getPage(slot, e.sender)
         if (!page) return { ok: false, error: 'No browser open' }
 
         const { groups, postUrl, title, caption, delayMin, delayMax, restAfter, restSeconds } = config

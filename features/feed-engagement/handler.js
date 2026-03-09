@@ -31,7 +31,7 @@ module.exports = function (getPage) {
     ipcMain.handle('start-feed-engagement', async (e, slot, config) => {
         if (runningSlots.has(slot)) return { ok: false, error: 'Already running' }
 
-        const page = getPage(slot)
+        const page = getPage(slot, e.sender)
         if (!page) return { ok: false, error: 'No browser open' }
 
         const { enableLike, enableComment, targetLikes, targetComments, commentTemplates, delayMin, delayMax, restAfter, restSeconds } = config

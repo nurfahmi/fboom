@@ -148,6 +148,7 @@ window.api.on('comment-progress', (slot, data) => {
 window.api.on('comment-done', (slot, data) => {
   if (slot !== currentSlot) return
   isCommenting = false
+  releaseSlotLock(slot, 'Auto Comment')
   updateCommentButtons()
   setStatus(`Done! ${data.successCount}/${data.total} comments posted`, 'success')
 })
@@ -157,6 +158,8 @@ async function startAutoComment() {
   const commentText = document.getElementById('commentTextField').value.trim()
   if (!commentText) { setStatus('Enter comment text first', 'error'); return }
   if (commentUrls.length === 0) { setStatus('Add target URLs first', 'error'); return }
+
+  if (!acquireSlotLock(currentSlot, 'Auto Comment')) return
 
   commentUrls.forEach(u => u.status = 'pending')
   renderCommentUrls()
@@ -177,12 +180,14 @@ async function startAutoComment() {
 
   await window.api.invoke('start-auto-comment', currentSlot, config)
   isCommenting = false
+  releaseSlotLock(currentSlot, 'Auto Comment')
   updateCommentButtons()
 }
 
 async function stopAutoComment() {
   await window.api.invoke('stop-auto-comment', currentSlot)
   isCommenting = false
+  releaseSlotLock(currentSlot, 'Auto Comment')
   updateCommentButtons()
   setStatus('Comment stopped', 'info')
 }

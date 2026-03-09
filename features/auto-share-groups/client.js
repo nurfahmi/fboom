@@ -84,30 +84,44 @@ function renderShareGroupsTable() {
     if (!tbody) return
 
     const filtered = data.groups.filter(g => g.name.toLowerCase().includes(filterVal))
-    if (countEl) countEl.textContent = `${filtered.length} / ${data.groups.length}`
+    const selectedCount = data.groups.filter(g => g._selected).length
+    if (countEl) countEl.textContent = `${selectedCount} selected / ${data.groups.length} total`
 
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" class="px-2 py-3 text-center text-gray-600">No groups. Load from TXT or import.</td></tr>'
+        tbody.innerHTML = '<tr><td colspan="5" class="px-2 py-3 text-center text-gray-600">No groups. Load from TXT or import.</td></tr>'
         return
     }
 
     tbody.innerHTML = filtered.map((g, idx) => {
+        const realIdx = data.groups.indexOf(g)
         let statusBadge = ''
         switch (g.status) {
-            case 'success': statusBadge = '<span class="text-emerald-400">✓</span>'; break
-            case 'error': statusBadge = '<span class="text-red-400">✕</span>'; break
-            case 'processing': statusBadge = '<span class="text-yellow-400">⟳</span>'; break
-            case 'waiting': statusBadge = '<span class="text-blue-400">⏳</span>'; break
-            case 'resting': statusBadge = '<span class="text-purple-400">💤</span>'; break
-            default: statusBadge = '<span class="text-gray-600">—</span>'
+            case 'success': statusBadge = '<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;background:rgba(34,197,94,0.15);color:#22c55e;">Success</span>'; break
+            case 'error': statusBadge = '<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;background:rgba(239,68,68,0.15);color:#ef4444;">Failed</span>'; break
+            case 'processing': statusBadge = '<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;background:rgba(234,179,8,0.15);color:#eab308;">Sharing...</span>'; break
+            default: statusBadge = '<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:600;background:transparent;color:#666;">Pending</span>'
         }
+        const checked = g._selected ? 'checked' : ''
         return `<tr class="border-b border-dark-100 hover:bg-dark-400/50">
+      <td class="px-1.5 py-1 text-center"><input type="checkbox" ${checked} onchange="toggleSgSelect(${realIdx}, this.checked)"></td>
       <td class="px-2 py-1 text-gray-500">${idx + 1}</td>
       <td class="px-2 py-1 text-gray-200 truncate max-w-[150px]" title="${g.name}">${g.name}</td>
       <td class="px-2 py-1 text-gray-400 font-mono text-[10px]">${g.groupId}</td>
       <td class="px-2 py-1 text-center">${statusBadge}</td>
     </tr>`
     }).join('')
+}
+
+function toggleSgSelect(idx, checked) {
+    const data = _getCurSgData()
+    if (data.groups[idx]) data.groups[idx]._selected = checked
+    renderShareGroupsTable()
+}
+
+function toggleSgSelectAll(checked) {
+    const data = _getCurSgData()
+    data.groups.forEach(g => g._selected = checked)
+    renderShareGroupsTable()
 }
 
 // ========================
@@ -133,7 +147,7 @@ async function loadShareGroupsTxt() {
     const result = await window.api.invoke('load-share-groups-txt')
     if (!result.ok) return
     const data = _getCurSgData()
-    data.groups = result.groups.map(g => ({ ...g, status: '' }))
+    data.groups = result.groups.map(g => ({ ...g, status: '', _selected: true }))
     renderShareGroupsTable()
     setStatus(`Loaded ${data.groups.length} groups from TXT`)
 }
@@ -155,7 +169,7 @@ function clearShareGroups() {
 // Called by other features (e.g. get-joined-groups) to import groups
 function importGroupsToAutoShare(groups) {
     const data = _getCurSgData()
-    data.groups = groups.map(g => ({ name: g.name, groupId: g.groupId, status: '' }))
+    data.groups = groups.map(g => ({ name: g.name, groupId: g.groupId, status: '', _selected: true }))
     renderShareGroupsTable()
 }
 
@@ -164,15 +178,18 @@ function importGroupsToAutoShare(groups) {
 // ========================
 async function startAutoShareGroups() {
     const data = _getCurSgData()
-    if (data.groups.length === 0) return setStatus('No target groups!', 'error')
+    const selected = data.groups.filter(g => g._selected)
+    if (selected.length === 0) return setStatus('Select groups first (use checkboxes)', 'error')
 
     // Save form values
     _saveSgSlot(currentSlot)
 
     if (!data.postUrl) return setStatus('Please enter a Facebook post URL', 'error')
 
-    // Reset statuses
-    data.groups.forEach(g => g.status = '')
+    if (!acquireSlotLock(currentSlot, 'Auto Share Groups')) return
+
+    // Reset statuses on selected
+    selected.forEach(g => g.status = '')
     renderShareGroupsTable()
 
     sgRunning = true
@@ -181,7 +198,7 @@ async function startAutoShareGroups() {
     setStatus('Starting auto share to groups...', 'info')
 
     const config = {
-        groups: data.groups,
+        groups: selected,
         postUrl: data.postUrl,
         title: data.title,
         caption: data.caption,
@@ -194,6 +211,7 @@ async function startAutoShareGroups() {
     await window.api.invoke('start-auto-share-groups', currentSlot, config)
     sgRunning = false
     data.running = false
+    releaseSlotLock(currentSlot, 'Auto Share Groups')
     updateShareGroupsButtons()
 }
 
@@ -202,6 +220,7 @@ async function stopAutoShareGroups() {
     sgRunning = false
     const data = _getCurSgData()
     data.running = false
+    releaseSlotLock(currentSlot, 'Auto Share Groups')
     updateShareGroupsButtons()
     setStatus('Stopped auto share groups.')
 }
@@ -210,13 +229,14 @@ async function stopAutoShareGroups() {
 // LISTEN TO PROGRESS & DONE EVENTS
 // ========================
 window.api.on('share-groups-progress', (slot, info) => {
-    // Update slot data even if not viewing
+    // Update slot data even if not viewing — but don't overwrite with waiting/resting
     const data = _sgSlotData[slot]
     if (data && info.index !== undefined && data.groups[info.index]) {
-        data.groups[info.index].status = info.status
+        if (info.status !== 'waiting' && info.status !== 'resting') {
+            data.groups[info.index].status = info.status
+        }
     }
-    if (slot !== currentSlot) return
-    renderShareGroupsTable()
+    if (slot === currentSlot) renderShareGroupsTable()
 
     const msgs = {
         processing: `Sharing to: ${info.groupName} (${info.index + 1}/${info.total})`,
@@ -225,14 +245,18 @@ window.api.on('share-groups-progress', (slot, info) => {
         waiting: `⏳ Waiting ${info.delay}s before next group...`,
         resting: `💤 Resting for ${info.restSeconds}s...`
     }
-    setStatus(msgs[info.status] || 'Processing...', info.status === 'error' ? 'error' : 'info')
+    setSlotStatus(slot, msgs[info.status] || 'Processing...', info.status === 'error' ? 'error' : 'info')
 })
 
 window.api.on('share-groups-done', (slot, summary) => {
-    if (slot !== currentSlot) return
-    sgRunning = false
-    const data = _getCurSgData()
-    data.running = false
-    updateShareGroupsButtons()
-    setStatus(`Done! ✅${summary.successCount} ❌${summary.failCount} / ${summary.total} groups`, 'success')
+    if (slot === currentSlot) {
+        sgRunning = false
+        const data = _getCurSgData()
+        data.running = false
+        updateShareGroupsButtons()
+    } else {
+        if (_sgSlotData[slot]) _sgSlotData[slot].running = false
+    }
+    releaseSlotLock(slot, 'Auto Share Groups')
+    setSlotStatus(slot, `Done! ✅${summary.successCount} ❌${summary.failCount} / ${summary.total} groups`, 'success')
 })

@@ -8,47 +8,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
     rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
-          colors: {
-            dark: {
-              50: '#1e2235',
-              100: '#181b2e',
-              200: '#13152a',
-              300: '#0f1025',
-              400: '#0b0c1f',
-              500: '#08091a',
-              600: '#050614'
-            },
-            accent: {
-              DEFAULT: '#6c5ce7',
-              light: '#a29bfe',
-              dark: '#5a4bd1',
-              glow: 'rgba(108, 92, 231, 0.3)'
-            },
-            success: { DEFAULT: '#00b894', light: '#55efc4' },
-            danger: { DEFAULT: '#e17055', light: '#fab1a0' },
-            warning: { DEFAULT: '#fdcb6e', light: '#ffeaa7' }
-          },
-          boxShadow: {
-            'glow': '0 0 30px rgba(108, 92, 231, 0.15)',
-            'glow-lg': '0 0 60px rgba(108, 92, 231, 0.2)',
-            'card': '0 4px 24px rgba(0,0,0,0.3)',
-            'card-hover': '0 8px 40px rgba(0,0,0,0.4)'
-          }
-        }
-      }
-    }
-  </script>
   <style>
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
+      font-family: 'Inter', system-ui, sans-serif;
     }
 
     ::-webkit-scrollbar {
@@ -60,131 +25,296 @@
     }
 
     ::-webkit-scrollbar-thumb {
-      background: #2d2f4e;
+      background: #2a2a2a;
       border-radius: 10px;
     }
 
     ::-webkit-scrollbar-thumb:hover {
-      background: #6c5ce7;
+      background: #7c6cf7;
     }
 
     body {
-      background: #0b0c1f;
+      background: #0e0e0e;
       background-image:
-        radial-gradient(ellipse 80% 60% at 50% -20%, rgba(108, 92, 231, 0.08), transparent),
-        radial-gradient(ellipse 60% 40% at 80% 100%, rgba(0, 184, 148, 0.05), transparent);
+        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(124, 108, 247, 0.06), transparent),
+        radial-gradient(ellipse 50% 40% at 80% 100%, rgba(34, 197, 94, 0.03), transparent);
+      color: #e0e0e0;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
     }
 
-    .glass-card {
-      background: linear-gradient(135deg, rgba(30, 34, 53, 0.9), rgba(19, 21, 42, 0.95));
-      border: 1px solid rgba(108, 92, 231, 0.1);
-      backdrop-filter: blur(20px);
-    }
-
-    .glass-card:hover {
-      border-color: rgba(108, 92, 231, 0.25);
-      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(108, 92, 231, 0.08);
-    }
-
+    /* ======== CARD ======== */
     .group-card {
+      background: #181818;
+      border: 1px solid #252525;
+      border-radius: 16px;
+      overflow: hidden;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      position: relative;
     }
 
     .group-card:hover {
-      transform: translateY(-2px);
+      border-color: #333;
+      transform: translateY(-3px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(124, 108, 247, 0.08);
+    }
+
+    .group-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #7c6cf7, #e94560);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .group-card:hover::before {
+      opacity: 1;
+    }
+
+    /* ======== BUTTONS ======== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-weight: 700;
+      font-size: 12px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      padding: 8px 18px;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, #6c5ce7, #5a4bd1);
-      transition: all 0.2s ease;
+      background: linear-gradient(135deg, #7c6cf7, #6c5ce7);
+      color: #fff;
     }
 
     .btn-primary:hover {
-      background: linear-gradient(135deg, #7c6df7, #6c5ce7);
-      box-shadow: 0 4px 20px rgba(108, 92, 231, 0.4);
+      background: linear-gradient(135deg, #8d7eff, #7c6cf7);
+      box-shadow: 0 4px 20px rgba(124, 108, 247, 0.35);
       transform: translateY(-1px);
     }
 
-    .btn-success {
-      background: linear-gradient(135deg, #00b894, #00a383);
-      transition: all 0.2s ease;
+    .btn-launch {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #fff;
     }
 
-    .btn-success:hover {
-      background: linear-gradient(135deg, #00d2a4, #00b894);
-      box-shadow: 0 4px 20px rgba(0, 184, 148, 0.4);
+    .btn-launch:hover {
+      background: linear-gradient(135deg, #4ade80, #22c55e);
+      box-shadow: 0 4px 20px rgba(34, 197, 94, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .btn-view {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: #fff;
+    }
+
+    .btn-view:hover {
+      background: linear-gradient(135deg, #60a5fa, #3b82f6);
+      box-shadow: 0 4px 20px rgba(59, 130, 246, 0.35);
       transform: translateY(-1px);
     }
 
     .btn-danger {
-      background: linear-gradient(135deg, #e17055, #d63031);
-      transition: all 0.2s ease;
+      background: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.15);
     }
 
     .btn-danger:hover {
-      background: linear-gradient(135deg, #f17565, #e17055);
-      box-shadow: 0 4px 20px rgba(225, 112, 85, 0.4);
+      background: rgba(239, 68, 68, 0.2);
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-danger-solid {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: #fff;
+    }
+
+    .btn-danger-solid:hover {
+      background: linear-gradient(135deg, #f87171, #ef4444);
+      box-shadow: 0 4px 20px rgba(239, 68, 68, 0.35);
       transform: translateY(-1px);
     }
 
     .btn-ghost {
-      background: rgba(108, 92, 231, 0.08);
-      border: 1px solid rgba(108, 92, 231, 0.15);
-      transition: all 0.2s ease;
+      background: rgba(124, 108, 247, 0.08);
+      color: #a0a0a0;
+      border: 1px solid #2a2a2a;
     }
 
     .btn-ghost:hover {
-      background: rgba(108, 92, 231, 0.15);
-      border-color: rgba(108, 92, 231, 0.3);
+      background: rgba(124, 108, 247, 0.14);
+      border-color: #444;
+      color: #e0e0e0;
     }
 
+    .btn-reset {
+      background: rgba(239, 68, 68, 0.06);
+      color: #888;
+      border: 1px solid rgba(239, 68, 68, 0.1);
+    }
+
+    .btn-reset:hover {
+      background: rgba(239, 68, 68, 0.12);
+      border-color: rgba(239, 68, 68, 0.25);
+      color: #ef4444;
+    }
+
+    /* ======== INPUT ======== */
     .input-field {
-      background: rgba(11, 12, 31, 0.6);
-      border: 1px solid rgba(108, 92, 231, 0.12);
-      transition: all 0.2s ease;
+      width: 100%;
+      padding: 10px 14px;
+      background: #111;
+      border: 1px solid #2a2a2a;
+      border-radius: 10px;
+      color: #e0e0e0;
+      font-size: 13px;
+      outline: none;
+      transition: all 0.2s;
     }
 
     .input-field:focus {
-      border-color: rgba(108, 92, 231, 0.5);
-      box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.1);
-      outline: none;
+      border-color: #7c6cf7;
+      box-shadow: 0 0 0 3px rgba(124, 108, 247, 0.1);
     }
 
+    .input-field::placeholder {
+      color: #555;
+    }
+
+    /* ======== MODAL ======== */
     .modal-overlay {
-      background: rgba(5, 6, 20, 0.8);
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
       backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
     }
 
-    .modal-content {
-      background: linear-gradient(160deg, rgba(30, 34, 53, 0.98), rgba(13, 15, 31, 0.98));
-      border: 1px solid rgba(108, 92, 231, 0.15);
-      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5), 0 0 60px rgba(108, 92, 231, 0.1);
+    .modal-box {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 18px;
+      padding: 28px;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+      animation: slideUp 0.25s ease-out;
     }
 
+    /* ======== ACCOUNT ROW ======== */
     .account-row {
-      background: rgba(11, 12, 31, 0.5);
-      border: 1px solid rgba(255, 255, 255, 0.04);
-      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 10px;
+      transition: all 0.2s;
     }
 
     .account-row:hover {
-      background: rgba(108, 92, 231, 0.06);
-      border-color: rgba(108, 92, 231, 0.12);
+      background: #1a1a1a;
+      border-color: #333;
     }
 
-    .progress-ring {
-      background: conic-gradient(#6c5ce7 var(--progress), rgba(108, 92, 231, 0.1) var(--progress));
+    /* ======== AVATAR ======== */
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 14px;
+      color: #c4b5fd;
+      border: 1px solid rgba(124, 108, 247, 0.2);
     }
 
+    .avatar-sm {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 10px;
+      color: #c4b5fd;
+      border: 1px solid rgba(124, 108, 247, 0.2);
+    }
+
+    /* ======== BADGE ======== */
     .badge {
-      background: linear-gradient(135deg, rgba(108, 92, 231, 0.15), rgba(108, 92, 231, 0.05));
-      border: 1px solid rgba(108, 92, 231, 0.2);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 700;
     }
 
+    .badge-purple {
+      background: rgba(124, 108, 247, 0.1);
+      color: #a78bfa;
+      border: 1px solid rgba(124, 108, 247, 0.15);
+    }
+
+    .badge-green {
+      background: rgba(34, 197, 94, 0.1);
+      color: #4ade80;
+      border: 1px solid rgba(34, 197, 94, 0.15);
+    }
+
+    .badge-yellow {
+      background: rgba(234, 179, 8, 0.1);
+      color: #fbbf24;
+      border: 1px solid rgba(234, 179, 8, 0.15);
+    }
+
+    .badge-gray {
+      background: rgba(160, 160, 160, 0.08);
+      color: #777;
+      border: 1px solid rgba(160, 160, 160, 0.1);
+    }
+
+    /* ======== PROGRESS BAR ======== */
+    .progress-track {
+      height: 4px;
+      background: #222;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.5s ease, background 0.3s;
+    }
+
+    /* ======== ANIMATIONS ======== */
     @keyframes fadeIn {
       from {
         opacity: 0;
-        transform: translateY(8px);
+        transform: translateY(6px);
       }
 
       to {
@@ -196,7 +326,7 @@
     @keyframes slideUp {
       from {
         opacity: 0;
-        transform: translateY(20px) scale(0.98);
+        transform: translateY(16px) scale(0.98);
       }
 
       to {
@@ -205,49 +335,48 @@
       }
     }
 
-    @keyframes pulse-glow {
-
-      0%,
-      100% {
-        box-shadow: 0 0 20px rgba(108, 92, 231, 0.1);
+    @keyframes spin {
+      from {
+        transform: rotate(0deg);
       }
 
-      50% {
-        box-shadow: 0 0 40px rgba(108, 92, 231, 0.2);
+      to {
+        transform: rotate(360deg);
       }
     }
 
-    .animate-fadeIn {
-      animation: fadeIn 0.4s ease-out forwards;
-    }
-
-    .animate-slideUp {
-      animation: slideUp 0.3s ease-out forwards;
+    .hidden {
+      display: none !important;
     }
   </style>
 </head>
 
-<body class="text-gray-300 min-h-screen font-sans antialiased">
+<body>
 
-  <div class="max-w-[880px] mx-auto px-6 py-8">
+  <div style="max-width:880px; margin:0 auto; padding:32px 24px;">
 
     <!-- HEADER -->
-    <div class="flex items-center justify-between mb-8">
-      <div class="flex items-center gap-4">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:32px;">
+      <div style="display:flex; align-items:center; gap:14px;">
         <div
-          class="w-11 h-11 rounded-xl bg-gradient-to-br from-accent to-accent-dark flex items-center justify-center shadow-glow">
-          <span class="text-xl">🚀</span>
-        </div>
+          style="width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg,#7c6cf7,#e94560); display:flex; align-items:center; justify-content:center; font-size:20px; box-shadow:0 4px 20px rgba(124,108,247,0.25);">
+          🤖</div>
         <div>
-          <h1 class="text-2xl font-extrabold text-white tracking-tight">Account Manager</h1>
-          <p class="text-xs text-gray-500 mt-0.5 font-medium">Manage your browser groups & accounts</p>
+          <img src="../logo.png" alt="FBOOMX" style="height:22px; filter:brightness(1.1); margin-bottom:2px;">
+          <p style="font-size:11px; color:#666; font-weight:500;">Manage your browser groups & accounts</p>
         </div>
       </div>
-      <div class="flex items-center gap-3">
-        <div id="groupCount" class="badge px-3 py-1.5 rounded-full text-xs font-semibold text-accent-light"></div>
-        <button onclick="showCreateGroup()" id="btnCreateGroup"
-          class="btn-primary px-5 py-2.5 text-white rounded-xl text-sm font-bold flex items-center gap-2">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span id="groupCount" class="badge badge-purple"></span>
+        <button onclick="showResetLicense()" class="btn btn-reset" title="Reset License">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+          </svg>
+          Reset License
+        </button>
+        <button onclick="showCreateGroup()" id="btnCreateGroup" class="btn btn-primary">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
           </svg>
           Create Group
@@ -255,102 +384,152 @@
       </div>
     </div>
 
-    <!-- GROUP LIST -->
-    <div id="groupList" class="space-y-4"></div>
+    <!-- GROUP CARD GRID -->
+    <div id="groupList" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:16px;"></div>
 
     <!-- EMPTY STATE -->
     <div id="emptyState" class="hidden">
-      <div class="glass-card rounded-2xl p-12 text-center">
+      <div
+        style="background:#181818; border:1px solid #252525; border-radius:18px; padding:60px 40px; text-align:center;">
         <div
-          class="w-20 h-20 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-dark-50 to-dark-200 flex items-center justify-center border border-dark-50">
-          <span class="text-4xl opacity-40">📂</span>
-        </div>
-        <h3 class="text-lg font-bold text-gray-400 mb-2">No groups yet</h3>
-        <p class="text-sm text-gray-600 mb-6 max-w-xs mx-auto">Create your first group to start managing your browser
-          accounts. Each group can have up to 2 accounts.</p>
-        <button onclick="showCreateGroup()"
-          class="btn-primary px-6 py-2.5 text-white rounded-xl text-sm font-bold inline-flex items-center gap-2">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          style="width:64px; height:64px; margin:0 auto 16px; border-radius:16px; background:linear-gradient(135deg,rgba(124,108,247,0.1),rgba(124,108,247,0.03)); display:flex; align-items:center; justify-content:center; font-size:28px; border:1px solid rgba(124,108,247,0.1);">
+          📁</div>
+        <h3 style="font-size:16px; font-weight:700; color:#999; margin-bottom:6px;">No groups yet</h3>
+        <p
+          style="font-size:12px; color:#555; margin-bottom:20px; max-width:280px; margin-left:auto; margin-right:auto;">
+          Create your first group to start managing your browser accounts. Each group can have up to 2 accounts.</p>
+        <button onclick="showCreateGroup()" class="btn btn-primary">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
           </svg>
           Create Group
         </button>
       </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div style="margin-top:40px; text-align:center;">
+      <img src="../logo.png" alt="FBOOMX" style="height:16px; opacity:0.15; margin-bottom:4px;">
+      <p style="font-size:10px; color:#333;">© 2026 FBOOMX · All rights reserved</p>
     </div>
   </div>
 
   <!-- CREATE GROUP MODAL -->
-  <div id="createGroupModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden">
-    <div class="modal-content rounded-2xl p-7 w-[420px] animate-slideUp">
-      <div class="flex items-center gap-3 mb-5">
+  <div id="createGroupModal" class="modal-overlay hidden">
+    <div class="modal-box" style="width:400px;">
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
         <div
-          class="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center border border-accent/10">
-          <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg,rgba(124,108,247,0.15),rgba(124,108,247,0.05)); display:flex; align-items:center; justify-content:center; border:1px solid rgba(124,108,247,0.1);">
+          <svg width="20" height="20" fill="none" stroke="#7c6cf7" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
         </div>
         <div>
-          <h2 class="text-lg font-bold text-white">New Group</h2>
-          <p class="text-xs text-gray-500">Create a browser profile group</p>
+          <h2 style="font-size:16px; font-weight:800; color:#fff;">New Group</h2>
+          <p style="font-size:11px; color:#666;">Create a browser profile group</p>
         </div>
       </div>
-      <input type="text" id="newGroupName" placeholder="Enter group name..."
-        class="input-field w-full px-4 py-3 rounded-xl text-sm text-gray-200 mb-5 placeholder-gray-600">
-      <div class="flex justify-end gap-2.5">
-        <button onclick="closeCreateGroup()"
-          class="btn-ghost px-5 py-2.5 text-gray-400 rounded-xl text-sm font-semibold">Cancel</button>
-        <button onclick="createGroup()"
-          class="btn-primary px-6 py-2.5 text-white rounded-xl text-sm font-bold">Create</button>
+      <input type="text" id="newGroupName" placeholder="Enter group name..." class="input-field"
+        style="margin-bottom:20px;">
+      <div style="display:flex; justify-content:flex-end; gap:8px;">
+        <button onclick="closeCreateGroup()" class="btn btn-ghost">Cancel</button>
+        <button onclick="createGroup()" class="btn btn-primary">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESET LICENSE MODAL -->
+  <div id="resetLicenseModal" class="modal-overlay hidden">
+    <div class="modal-box" style="width:420px;">
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+        <div
+          style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg,rgba(239,68,68,0.15),rgba(239,68,68,0.05)); display:flex; align-items:center; justify-content:center; border:1px solid rgba(239,68,68,0.1);">
+          <svg width="20" height="20" fill="none" stroke="#ef4444" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+        </div>
+        <div>
+          <h2 style="font-size:16px; font-weight:800; color:#fff;">Reset License</h2>
+          <p style="font-size:11px; color:#666;">This action cannot be undone</p>
+        </div>
+      </div>
+      <div
+        style="padding:14px 16px; background:rgba(239,68,68,0.04); border:1px solid rgba(239,68,68,0.1); border-radius:12px; margin-bottom:20px;">
+        <p style="font-size:12px; color:#ccc; line-height:1.6;">This will:</p>
+        <ul style="font-size:11px; color:#999; line-height:1.8; padding-left:18px; margin-top:6px;">
+          <li>Unlink this device from your license key</li>
+          <li>Clear all saved session data</li>
+          <li>Close all open browser windows</li>
+          <li>Return to the login screen</li>
+        </ul>
+      </div>
+      <p id="resetStatus" style="font-size:11px; color:#888; margin-bottom:14px; display:none;"></p>
+      <div style="display:flex; justify-content:flex-end; gap:8px;">
+        <button onclick="closeResetLicense()" id="btnResetCancel" class="btn btn-ghost">Cancel</button>
+        <button onclick="confirmResetLicense()" id="btnResetConfirm" class="btn btn-danger-solid">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+          </svg>
+          Reset &amp; Logout
+        </button>
       </div>
     </div>
   </div>
 
   <!-- GROUP DETAIL MODAL -->
-  <div id="groupDetailModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden">
-    <div class="modal-content rounded-2xl p-7 w-[500px] max-h-[80vh] overflow-y-auto animate-slideUp">
+  <div id="groupDetailModal" class="modal-overlay hidden">
+    <div class="modal-box" style="width:480px; max-height:80vh; overflow-y:auto;">
       <!-- Header -->
-      <div class="flex items-center justify-between mb-6">
-        <div class="flex items-center gap-3">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;">
+        <div style="display:flex; align-items:center; gap:12px;">
           <div
-            class="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center border border-accent/10">
-            <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg,rgba(124,108,247,0.15),rgba(124,108,247,0.05)); display:flex; align-items:center; justify-content:center; border:1px solid rgba(124,108,247,0.1);">
+            <svg width="20" height="20" fill="none" stroke="#7c6cf7" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
           <div>
-            <h2 class="text-lg font-bold text-white" id="detailGroupName"></h2>
-            <p class="text-xs text-gray-500" id="detailAccountCount"></p>
+            <h2 id="detailGroupName" style="font-size:16px; font-weight:800; color:#fff;"></h2>
+            <p id="detailAccountCount" style="font-size:11px; color:#666;"></p>
           </div>
         </div>
         <button onclick="closeDetail()"
-          class="w-8 h-8 rounded-lg bg-dark-300/50 hover:bg-dark-200 text-gray-500 hover:text-white flex items-center justify-center transition text-base">✕</button>
+          style="width:32px; height:32px; border-radius:8px; background:#1e1e1e; border:1px solid #2a2a2a; color:#666; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s;"
+          onmouseover="this.style.borderColor='#444';this.style.color='#fff'"
+          onmouseout="this.style.borderColor='#2a2a2a';this.style.color='#666'">✕</button>
       </div>
 
-      <!-- Account capacity indicator -->
-      <div class="mb-5 p-3 rounded-xl bg-dark-400/50 border border-dark-50/30">
-        <div class="flex items-center justify-between mb-2">
-          <span class="text-xs font-semibold text-gray-400">Account Slots</span>
-          <span class="text-xs font-bold text-accent-light" id="detailSlotText">0 / 2</span>
+      <!-- Slot capacity -->
+      <div style="margin-bottom:20px; padding:12px 16px; background:#111; border:1px solid #222; border-radius:12px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+          <span style="font-size:11px; font-weight:600; color:#888;">Account Slots</span>
+          <span id="detailSlotText" style="font-size:11px; font-weight:800; color:#a78bfa;">0 / 2</span>
         </div>
-        <div class="h-1.5 rounded-full bg-dark-300 overflow-hidden">
-          <div id="detailSlotBar"
-            class="h-full rounded-full bg-gradient-to-r from-accent to-accent-light transition-all duration-500"
-            style="width: 0%"></div>
+        <div class="progress-track">
+          <div id="detailSlotBar" class="progress-fill"
+            style="width:0%; background:linear-gradient(90deg,#7c6cf7,#a78bfa);"></div>
         </div>
       </div>
 
       <!-- Account list -->
-      <div id="detailAccountList" class="space-y-2 mb-5"></div>
+      <div id="detailAccountList" style="display:flex; flex-direction:column; gap:8px; margin-bottom:20px;"></div>
+
+      <!-- Slots full banner -->
+      <div id="slotFullBanner" class="hidden"
+        style="margin-bottom:16px; padding:10px 16px; background:rgba(34,197,94,0.06); border:1px solid rgba(34,197,94,0.15); border-radius:10px; text-align:center;">
+        <span style="font-size:11px; font-weight:700; color:#22c55e;">✅ All slots are filled — ready to launch!</span>
+      </div>
 
       <!-- Add account -->
-      <div class="flex gap-2 mb-4">
-        <input type="text" id="newAccountName" placeholder="Account name"
-          class="input-field flex-1 px-4 py-2.5 rounded-xl text-sm text-gray-200 placeholder-gray-600">
-        <button onclick="addAccount()"
-          class="btn-success px-5 py-2.5 text-white rounded-xl text-sm font-bold flex items-center gap-1.5">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div id="addAccountSection" style="display:flex; gap:8px; margin-bottom:16px;">
+        <input type="text" id="newAccountName" placeholder="Account name" class="input-field" style="flex:1;">
+        <button onclick="addAccount()" id="btnAddAccount" class="btn btn-launch"
+          style="padding:8px 16px; white-space:nowrap;">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
           </svg>
           Add
@@ -358,23 +537,21 @@
       </div>
 
       <!-- Actions -->
-      <div class="flex gap-2.5">
-        <button onclick="generateAccounts()"
-          class="flex-1 btn-ghost px-4 py-2.5 text-gray-300 rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
-          <svg class="w-4 h-4 text-accent-light" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div style="display:flex; gap:8px;">
+        <button onclick="generateAccounts()" id="btnAutoGenerate" class="btn btn-ghost" style="flex:1;">
+          <svg width="14" height="14" fill="none" stroke="#a78bfa" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
           </svg>
           Auto Generate
         </button>
-        <button onclick="launchCurrentGroup()"
-          class="flex-1 btn-primary px-4 py-2.5 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button onclick="handleDetailLaunchOrView()" id="btnDetailLaunch" class="btn btn-primary" style="flex:1;">
+          <svg id="detailLaunchIcon" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          Launch Group
+          <span id="detailLaunchText">Launch Group</span>
         </button>
       </div>
     </div>
@@ -388,6 +565,7 @@
     async function loadGroups() {
       groups = await window.api.getGroups()
       renderGroups()
+      await updateAllLaunchButtons()
     }
 
     function renderGroups() {
@@ -398,7 +576,6 @@
 
       countBadge.textContent = `${groups.length} / ${MAX_GROUPS} Groups`
 
-      // Disable create button if at max
       if (groups.length >= MAX_GROUPS) {
         createBtn.style.opacity = '0.4'
         createBtn.style.pointerEvents = 'none'
@@ -419,38 +596,89 @@
       list.innerHTML = groups.map((g, idx) => {
         const accountCount = g.accounts.length
         const slotPercent = (accountCount / 2) * 100
-        const statusColor = accountCount === 0 ? 'text-gray-600' : accountCount < 2 ? 'text-warning' : 'text-success'
-        const statusText = accountCount === 0 ? 'No accounts' : accountCount < 2 ? `${accountCount}/2 accounts` : '2/2 accounts ✓'
+        const isFull = accountCount >= 2
+
+        // Status badge
+        let statusBadge = ''
+        if (accountCount === 0) {
+          statusBadge = '<span class="badge badge-gray">No accounts</span>'
+        } else if (accountCount < 2) {
+          statusBadge = `<span class="badge badge-yellow">${accountCount}/2 accounts</span>`
+        } else {
+          statusBadge = '<span class="badge badge-green">✓ Ready</span>'
+        }
+
+        // Account avatars stacked
         const avatars = g.accounts.map((a, i) => `
-          <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-accent/25 to-accent/10 flex items-center justify-center border border-accent/15 text-[10px] font-bold text-accent-light ${i > 0 ? '-ml-1' : ''}" title="${a.name}">
+          <div class="avatar-sm" style="background:linear-gradient(135deg,rgba(124,108,247,0.15),rgba(124,108,247,0.05)); ${i > 0 ? 'margin-left:-6px;' : ''}" title="${a.name}">
             ${a.name.charAt(0).toUpperCase()}
           </div>
         `).join('')
 
+        // Account names list
+        const accountNames = g.accounts.map(a => `
+          <div style="display:flex; align-items:center; gap:8px; padding:6px 0;">
+            <div style="width:6px; height:6px; border-radius:50%; background:#22c55e; box-shadow:0 0 6px rgba(34,197,94,0.4);"></div>
+            <span style="font-size:11px; color:#ccc; font-weight:500;">${a.name}</span>
+          </div>
+        `).join('')
+
+        const progressColor = isFull
+          ? 'background:linear-gradient(90deg,#22c55e,#4ade80)'
+          : 'background:linear-gradient(90deg,#7c6cf7,#a78bfa)'
+
         return `
-          <div class="group-card glass-card rounded-2xl p-5 cursor-pointer animate-fadeIn" style="animation-delay: ${idx * 80}ms" onclick="openDetail('${g.id}')">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center border border-accent/10">
-                  <span class="text-xl">${idx === 0 ? '🅰️' : '🅱️'}</span>
-                </div>
-                <div>
-                  <h3 class="text-base font-bold text-white mb-1">${g.name}</h3>
-                  <div class="flex items-center gap-3">
-                    <span class="text-xs font-medium ${statusColor}">${statusText}</span>
-                    ${accountCount > 0 ? `<div class="flex items-center">${avatars}</div>` : ''}
+          <div class="group-card" style="animation:fadeIn 0.4s ease-out ${idx * 100}ms both;" onclick="openDetail('${g.id}')">
+            <!-- Card Header -->
+            <div style="padding:20px 20px 0;">
+              <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:14px;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                  <div style="width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,rgba(124,108,247,0.12),rgba(124,108,247,0.04)); display:flex; align-items:center; justify-content:center; border:1px solid rgba(124,108,247,0.1); font-size:20px;">
+                    ${idx === 0 ? '🅰️' : '🅱️'}
+                  </div>
+                  <div>
+                    <h3 style="font-size:15px; font-weight:800; color:#fff; margin-bottom:4px;">${g.name}</h3>
+                    ${statusBadge}
                   </div>
                 </div>
-              </div>
-              <div class="flex gap-2 items-center">
-                <button onclick="event.stopPropagation(); launchGroup('${g.id}')" class="btn-primary px-4 py-2 text-white rounded-xl text-xs font-bold flex items-center gap-1.5" ${accountCount === 0 ? 'style="opacity:0.4;pointer-events:none" title="Add accounts first"' : ''}>
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/></svg>
-                  Launch
-                </button>
-                <button onclick="event.stopPropagation(); deleteGroup('${g.id}')" class="w-8 h-8 rounded-xl bg-danger/10 hover:bg-danger/20 text-danger hover:text-danger-light flex items-center justify-center transition text-xs font-bold border border-danger/10 hover:border-danger/20" title="Delete group">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                <button onclick="event.stopPropagation(); deleteGroup('${g.id}')" class="btn btn-danger" style="padding:6px; border-radius:8px; font-size:10px;" title="Delete">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                 </button>
               </div>
+
+              <!-- Slot Progress -->
+              <div style="margin-bottom:12px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                  <span style="font-size:10px; color:#666; font-weight:600;">Slots</span>
+                  <span style="font-size:10px; color:#888; font-weight:700;">${accountCount}/2</span>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill" style="width:${slotPercent}%; ${progressColor}"></div>
+                </div>
+              </div>
+
+              <!-- Account List -->
+              ${accountCount > 0 ? `
+                <div style="padding:8px 0; border-top:1px solid #222;">
+                  ${accountNames}
+                </div>
+              ` : `
+                <div style="padding:12px 0; border-top:1px solid #222; text-align:center;">
+                  <span style="font-size:11px; color:#444;">No accounts assigned</span>
+                </div>
+              `}
+            </div>
+
+            <!-- Card Footer -->
+            <div style="padding:12px 20px; background:#111; border-top:1px solid #1e1e1e; display:flex; gap:8px;">
+              <button onclick="event.stopPropagation(); openDetail('${g.id}')" class="btn btn-ghost" style="flex:1; padding:7px 0; font-size:11px;">
+                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                Manage
+              </button>
+              <button onclick="event.stopPropagation(); handleLaunchOrView('${g.id}')" id="btnLaunch_${g.id}" class="btn btn-launch" style="flex:1; padding:7px 0; font-size:11px;" ${accountCount === 0 ? 'disabled style="flex:1; padding:7px 0; font-size:11px; opacity:0.3; pointer-events:none;"' : ''}>
+                <svg id="launchIcon_${g.id}" width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/></svg>
+                <span id="launchText_${g.id}">Launch</span>
+              </button>
             </div>
           </div>
         `
@@ -500,6 +728,7 @@
       document.getElementById('detailGroupName').textContent = group.name
       document.getElementById('groupDetailModal').classList.remove('hidden')
       renderDetailAccounts(group)
+      await updateDetailLaunchButton()
     }
 
     function closeDetail() {
@@ -513,43 +742,60 @@
       const slotText = document.getElementById('detailSlotText')
       const slotBar = document.getElementById('detailSlotBar')
       const countText = document.getElementById('detailAccountCount')
+      const addSection = document.getElementById('addAccountSection')
+      const btnGenerate = document.getElementById('btnAutoGenerate')
+      const slotFullBanner = document.getElementById('slotFullBanner')
       const accountCount = group.accounts.length
+      const isFull = accountCount >= 2
 
       slotText.textContent = `${accountCount} / 2`
       slotBar.style.width = `${(accountCount / 2) * 100}%`
       countText.textContent = `${accountCount} account${accountCount !== 1 ? 's' : ''} assigned`
 
-      // Change bar color based on fill
-      if (accountCount >= 2) {
-        slotBar.className = 'h-full rounded-full bg-gradient-to-r from-success to-success-light transition-all duration-500'
+      if (isFull) {
+        slotBar.style.background = 'linear-gradient(90deg,#22c55e,#4ade80)'
       } else {
-        slotBar.className = 'h-full rounded-full bg-gradient-to-r from-accent to-accent-light transition-all duration-500'
+        slotBar.style.background = 'linear-gradient(90deg,#7c6cf7,#a78bfa)'
+      }
+
+      if (isFull) {
+        addSection.style.display = 'none'
+        btnGenerate.style.opacity = '0.3'
+        btnGenerate.style.pointerEvents = 'none'
+        btnGenerate.title = 'All slots are filled'
+        slotFullBanner.classList.remove('hidden')
+      } else {
+        addSection.style.display = 'flex'
+        btnGenerate.style.opacity = '1'
+        btnGenerate.style.pointerEvents = 'auto'
+        btnGenerate.title = ''
+        slotFullBanner.classList.add('hidden')
       }
 
       if (accountCount === 0) {
         list.innerHTML = `
-          <div class="text-center py-8 rounded-xl border border-dashed border-dark-50/30">
-            <div class="text-2xl mb-2 opacity-30">👤</div>
-            <p class="text-xs text-gray-600 font-medium">No accounts yet</p>
-            <p class="text-[11px] text-gray-700 mt-1">Add accounts manually or use Auto Generate</p>
+          <div style="text-align:center; padding:32px; border:1px dashed #2a2a2a; border-radius:12px;">
+            <div style="font-size:28px; margin-bottom:8px; opacity:0.3;">👤</div>
+            <p style="font-size:11px; color:#555; font-weight:500;">No accounts yet</p>
+            <p style="font-size:10px; color:#444; margin-top:4px;">Add accounts manually or use Auto Generate</p>
           </div>
         `
         return
       }
 
       list.innerHTML = group.accounts.map((a, i) => `
-        <div class="account-row rounded-xl px-4 py-3 flex items-center justify-between group">
-          <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center border border-accent/10 text-sm font-bold text-accent-light">
+        <div class="account-row">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div class="avatar" style="background:linear-gradient(135deg,rgba(124,108,247,0.15),rgba(124,108,247,0.05));">
               ${a.name.charAt(0).toUpperCase()}
             </div>
             <div>
-              <span class="text-sm font-semibold text-gray-200">${a.name}</span>
-              <div class="text-[10px] text-gray-600 font-medium mt-0.5">Slot ${i + 1} • Browser Profile</div>
+              <span style="font-size:13px; font-weight:600; color:#e0e0e0;">${a.name}</span>
+              <div style="font-size:10px; color:#555; font-weight:500; margin-top:2px;">Slot ${i + 1} • Browser Profile</div>
             </div>
           </div>
-          <button onclick="removeAccount('${a.id}')" class="w-7 h-7 rounded-lg bg-danger/0 group-hover:bg-danger/10 text-transparent group-hover:text-danger flex items-center justify-center transition text-xs" title="Remove account">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+          <button onclick="removeAccount('${a.id}')" style="width:28px; height:28px; border-radius:8px; background:transparent; border:1px solid transparent; color:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s;" onmouseover="this.style.background='rgba(239,68,68,0.1)';this.style.borderColor='rgba(239,68,68,0.2)';this.style.color='#ef4444'" onmouseout="this.style.background='transparent';this.style.borderColor='transparent';this.style.color='transparent'" title="Remove account">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
           </button>
         </div>
       `).join('')
@@ -586,14 +832,130 @@
       renderDetailAccounts(group)
     }
 
+    // === RESET LICENSE ===
+    function showResetLicense() {
+      document.getElementById('resetLicenseModal').classList.remove('hidden')
+      document.getElementById('resetStatus').style.display = 'none'
+      document.getElementById('btnResetConfirm').disabled = false
+      document.getElementById('btnResetCancel').disabled = false
+    }
+
+    function closeResetLicense() {
+      document.getElementById('resetLicenseModal').classList.add('hidden')
+    }
+
+    async function confirmResetLicense() {
+      const statusEl = document.getElementById('resetStatus')
+      const confirmBtn = document.getElementById('btnResetConfirm')
+      const cancelBtn = document.getElementById('btnResetCancel')
+
+      confirmBtn.disabled = true
+      cancelBtn.disabled = true
+      confirmBtn.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="animation:spin 1s linear infinite;">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        Resetting...
+      `
+      statusEl.style.display = 'block'
+      statusEl.textContent = 'Contacting server...'
+      statusEl.style.color = '#888'
+
+      try {
+        const result = await window.api.resetLicense()
+        if (result.ok) {
+          statusEl.textContent = '✅ License reset successful. Redirecting to login...'
+          statusEl.style.color = '#22c55e'
+          // The main process will close this window and open login
+        } else {
+          statusEl.textContent = '❌ Failed to reset: ' + (result.error || 'Unknown error')
+          statusEl.style.color = '#ef4444'
+          confirmBtn.disabled = false
+          cancelBtn.disabled = false
+          confirmBtn.innerHTML = 'Reset & Logout'
+        }
+      } catch (err) {
+        statusEl.textContent = '❌ Error: ' + err.message
+        statusEl.style.color = '#ef4444'
+        confirmBtn.disabled = false
+        cancelBtn.disabled = false
+        confirmBtn.innerHTML = 'Reset & Logout'
+      }
+    }
+
     async function launchCurrentGroup() {
       if (!currentGroupId) return
       await window.api.launchGroup(currentGroupId)
+      await updateAllLaunchButtons()
     }
 
     async function launchGroup(id) {
       await window.api.launchGroup(id)
+      await updateAllLaunchButtons()
     }
+
+    // === LAUNCH/VIEW BUTTON MANAGEMENT ===
+    async function handleLaunchOrView(groupId) {
+      const isLaunched = await window.api.isGroupLaunched(groupId)
+      if (isLaunched) {
+        await window.api.focusGroupWindow(groupId)
+      } else {
+        await window.api.launchGroup(groupId)
+      }
+      await updateAllLaunchButtons()
+    }
+
+    async function handleDetailLaunchOrView() {
+      if (!currentGroupId) return
+      const isLaunched = await window.api.isGroupLaunched(currentGroupId)
+      if (isLaunched) {
+        await window.api.focusGroupWindow(currentGroupId)
+      } else {
+        await window.api.launchGroup(currentGroupId)
+      }
+      await updateDetailLaunchButton()
+    }
+
+    async function updateAllLaunchButtons() {
+      for (const g of groups) {
+        const btn = document.getElementById('btnLaunch_' + g.id)
+        const text = document.getElementById('launchText_' + g.id)
+        if (!btn || !text) continue
+        const isLaunched = await window.api.isGroupLaunched(g.id)
+        if (isLaunched) {
+          btn.className = 'btn btn-view'
+          btn.style.flex = '1'
+          btn.style.padding = '7px 0'
+          btn.style.fontSize = '11px'
+          text.textContent = 'View'
+        } else {
+          btn.className = 'btn btn-launch'
+          btn.style.flex = '1'
+          btn.style.padding = '7px 0'
+          btn.style.fontSize = '11px'
+          text.textContent = 'Launch'
+        }
+      }
+    }
+
+    async function updateDetailLaunchButton() {
+      if (!currentGroupId) return
+      const btn = document.getElementById('btnDetailLaunch')
+      const text = document.getElementById('detailLaunchText')
+      if (!btn || !text) return
+      const isLaunched = await window.api.isGroupLaunched(currentGroupId)
+      if (isLaunched) {
+        text.textContent = 'View Group'
+      } else {
+        text.textContent = 'Launch Group'
+      }
+    }
+
+    // Listen for browser window closing to revert buttons
+    window.api.onGroupWindowClosed((groupId) => {
+      updateAllLaunchButtons()
+      updateDetailLaunchButton()
+    })
 
     // Enter & Escape key support
     document.addEventListener('keydown', (e) => {
@@ -604,6 +966,7 @@
       if (e.key === 'Escape') {
         closeCreateGroup()
         closeDetail()
+        closeResetLicense()
       }
     })
 

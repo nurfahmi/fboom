@@ -9,5 +9,9 @@ contextBridge.exposeInMainWorld('api', {
   removeAccount: (groupId, accountId) => ipcRenderer.invoke('remove-account', groupId, accountId),
   renameAccount: (groupId, accountId, name) => ipcRenderer.invoke('rename-account', groupId, accountId, name),
   generateAccounts: (groupId) => ipcRenderer.invoke('generate-accounts', groupId),
-  launchGroup: (groupId) => ipcRenderer.invoke('launch-group', groupId)
+  launchGroup: (groupId) => ipcRenderer.invoke('launch-group', groupId),
+  isGroupLaunched: (groupId) => ipcRenderer.invoke('is-group-launched', groupId),
+  focusGroupWindow: (groupId) => ipcRenderer.invoke('focus-group-window', groupId),
+  resetLicense: () => ipcRenderer.invoke('license-reset-device'),
+  onGroupWindowClosed: (callback) => ipcRenderer.on('group-window-closed', (e, groupId) => callback(groupId))
 })

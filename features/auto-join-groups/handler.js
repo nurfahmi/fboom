@@ -22,7 +22,7 @@ module.exports = function (getPage) {
     // START SEARCH GROUPS
     // ========================
     ipcMain.handle('start-search-groups', async (e, slot, config) => {
-        const page = getPage(slot)
+        const page = getPage(slot, e.sender)
         if (!page) return { ok: false, error: 'No browser open' }
 
         const { keyword, limit } = config
@@ -155,7 +155,7 @@ module.exports = function (getPage) {
     // START JOIN GROUPS
     // ========================
     ipcMain.handle('start-join-groups', async (e, slot, config) => {
-        const page = getPage(slot)
+        const page = getPage(slot, e.sender)
         if (!page) return { ok: false, error: 'No browser open' }
 
         const { groups, delayMin, delayMax, restAfter, restSeconds } = config

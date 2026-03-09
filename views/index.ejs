@@ -1,16 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Group: <%= groupName %></title>
+  <title>Group: <%= groupName %>
+  </title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
-            dark: { 100: '#1a1a2e', 200: '#16213e', 300: '#0f3460', 400: '#0d1b3e' },
+            dark: { 100: '#1e1e1e', 200: '#252525', 300: '#2d2d2d', 400: '#1a1a1a' },
             accent: { DEFAULT: '#e94560', light: '#ff6b81' }
           }
         }
@@ -18,221 +21,813 @@
     }
   </script>
   <style>
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: #16213e; }
-    ::-webkit-scrollbar-thumb { background: #0f3460; border-radius: 3px; }
+    * {
+      font-family: 'Inter', system-ui, sans-serif;
+      margin: 0;
+      box-sizing: border-box;
+    }
+
+    /* ===================== DARK THEME (Neutral Gray) ===================== */
+    :root,
+    [data-theme="dark"] {
+      --bg-body: #111111;
+      --bg-panel: #181818;
+      --bg-card: #1e1e1e;
+      --bg-elevated: #252525;
+      --bg-input: #1a1a1a;
+      --bg-hover: #2a2a2a;
+      --border-subtle: #2a2a2a;
+      --border-default: #333333;
+      --border-strong: #444444;
+      --text-primary: #e8e8e8;
+      --text-secondary: #a0a0a0;
+      --text-tertiary: #666666;
+      --text-heading: #ffffff;
+      --accent: #7c6cf7;
+      --accent-hover: #9b8dff;
+      --accent-bg: rgba(124, 108, 247, 0.08);
+      --danger: #ef4444;
+      --success: #22c55e;
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+
+    /* ===================== LIGHT THEME (Clean White) ===================== */
+    [data-theme="light"] {
+      --bg-body: #f2f3f5;
+      --bg-panel: #ffffff;
+      --bg-card: #ffffff;
+      --bg-elevated: #f7f8fa;
+      --bg-input: #ffffff;
+      --bg-hover: #f0f1f3;
+      --border-subtle: #e5e7eb;
+      --border-default: #d1d5db;
+      --border-strong: #9ca3af;
+      --text-primary: #111827;
+      --text-secondary: #4b5563;
+      --text-tertiary: #9ca3af;
+      --text-heading: #000000;
+      --accent: #6c5ce7;
+      --accent-hover: #5b4bd5;
+      --accent-bg: rgba(108, 92, 231, 0.06);
+      --danger: #dc2626;
+      --success: #16a34a;
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.03);
+    }
+
+    body {
+      background: var(--bg-body) !important;
+      color: var(--text-primary) !important;
+    }
+
+    /* === SCROLLBAR === */
+    ::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg-panel);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-default);
+      border-radius: 10px;
+    }
+
+    #sidebar::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    #sidebar::-webkit-scrollbar-thumb {
+      background: var(--border-default);
+      border-radius: 4px;
+    }
+
+    /* === ANIMATIONS === */
+    @keyframes shimmer {
+      0% {
+        background-position: 200% 0;
+      }
+
+      100% {
+        background-position: -200% 0;
+      }
+    }
+
+    @keyframes pulse-dot {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+      }
+
+      70% {
+        box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
+      }
+    }
+
+    /* === RESIZE HANDLE === */
+    #resizeHandle {
+      transition: background 0.15s;
+    }
+
+    #resizeHandle:hover {
+      background: var(--bg-hover) !important;
+    }
+
+    #resizeHandle:hover .rh-line {
+      background: var(--accent) !important;
+    }
+
+    #resizeHandle:active .rh-line {
+      background: #e94560 !important;
+    }
+
+    /* ===================== LIGHT OVERRIDE: Tailwind classes ===================== */
+    [data-theme="light"] .bg-dark-100 {
+      background-color: #f7f8fa !important;
+    }
+
+    [data-theme="light"] .bg-dark-200 {
+      background-color: #f0f1f3 !important;
+    }
+
+    [data-theme="light"] .bg-dark-300 {
+      background-color: #e5e7eb !important;
+    }
+
+    [data-theme="light"] .bg-dark-400 {
+      background-color: #f2f3f5 !important;
+    }
+
+    [data-theme="light"] .bg-dark-100\/50,
+    [data-theme="light"] .bg-dark-400\/50,
+    [data-theme="light"] .hover\:bg-dark-400\/50:hover {
+      background-color: #f0f1f3 !important;
+    }
+
+    [data-theme="light"] .text-gray-200 {
+      color: #111827 !important;
+    }
+
+    [data-theme="light"] .text-gray-300 {
+      color: #1f2937 !important;
+    }
+
+    [data-theme="light"] .text-gray-400 {
+      color: #374151 !important;
+    }
+
+    [data-theme="light"] .text-gray-500 {
+      color: #4b5563 !important;
+    }
+
+    [data-theme="light"] .text-gray-600 {
+      color: #6b7280 !important;
+    }
+
+    [data-theme="light"] .border-dark-100,
+    [data-theme="light"] .border-dark-200 {
+      border-color: #e5e7eb !important;
+    }
+
+    /* Forms & inputs */
+    [data-theme="light"] input:not([type="checkbox"]):not([type="radio"]),
+    [data-theme="light"] textarea,
+    [data-theme="light"] select {
+      background-color: #ffffff !important;
+      color: #111827 !important;
+      border-color: #d1d5db !important;
+    }
+
+    [data-theme="light"] input:focus,
+    [data-theme="light"] textarea:focus,
+    [data-theme="light"] select:focus {
+      border-color: var(--accent) !important;
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(108, 92, 231, 0.15) !important;
+    }
+
+    /* Tables */
+    [data-theme="light"] table {
+      border-color: #e5e7eb !important;
+    }
+
+    [data-theme="light"] thead {
+      background: #f7f8fa !important;
+    }
+
+    [data-theme="light"] th {
+      color: #374151 !important;
+      border-color: #e5e7eb !important;
+    }
+
+    [data-theme="light"] td {
+      color: #111827 !important;
+      border-color: #f3f4f6 !important;
+    }
+
+    [data-theme="light"] tr:hover td {
+      background: #f7f8fa !important;
+    }
+
+    [data-theme="light"] .border-b {
+      border-color: #e5e7eb !important;
+    }
+
+    /* Generic section overrides for styled divs */
+    [data-theme="light"] .feature-panel {
+      color: #111827;
+    }
+
+    [data-theme="light"] .feature-panel div {
+      border-color: #e5e7eb;
+    }
+
+    [data-theme="light"] .feature-panel label {
+      color: #374151;
+    }
+
+    [data-theme="light"] .feature-panel h3,
+    [data-theme="light"] .feature-panel h4,
+    [data-theme="light"] .feature-panel h5 {
+      color: #111827 !important;
+    }
+
+    /* Fix any inline dark backgrounds */
+    [data-theme="light"] [style*="background:#0d1117"],
+    [data-theme="light"] [style*="background: #0d1117"],
+    [data-theme="light"] [style*="background:#161b22"],
+    [data-theme="light"] [style*="background: #161b22"],
+    [data-theme="light"] [style*="background:#1a1a2e"],
+    [data-theme="light"] [style*="background:#1e1e1e"],
+    [data-theme="light"] [style*="background:#1a1a1a"],
+    [data-theme="light"] [style*="background:#181818"],
+    [data-theme="light"] [style*="background:#252525"] {
+      background: var(--bg-card) !important;
+    }
+
+    [data-theme="light"] [style*="border-color:#21262d"],
+    [data-theme="light"] [style*="border-color:#30363d"],
+    [data-theme="light"] [style*="border-color:#333"],
+    [data-theme="light"] [style*="border:1px solid #21262d"],
+    [data-theme="light"] [style*="border:1px solid #333"],
+    [data-theme="light"] [style*="border-bottom:1px solid #21262d"],
+    [data-theme="light"] [style*="border-bottom:1px solid #333"] {
+      border-color: var(--border-default) !important;
+    }
+
+    [data-theme="light"] [style*="color:#c9d1d9"],
+    [data-theme="light"] [style*="color:#8b949e"],
+    [data-theme="light"] [style*="color:#e8e8e8"],
+    [data-theme="light"] [style*="color:#a0a0a0"] {
+      color: var(--text-primary) !important;
+    }
+
+    /* Accent buttons preserve color in both themes */
+    .bg-accent {
+      background-color: #e94560 !important;
+    }
+
+    .text-white,
+    [data-theme="light"] .text-white {
+      color: #fff !important;
+    }
+
+    /* ===================== COMPONENT STYLES ===================== */
+    .theme-btn {
+      width: 44px;
+      height: 22px;
+      border-radius: 14px;
+      border: 2px solid var(--border-default);
+      cursor: pointer;
+      position: relative;
+      transition: all 0.3s;
+      padding: 0;
+      background: var(--bg-elevated);
+    }
+
+    .theme-btn::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      transition: all 0.3s;
+    }
+
+    [data-theme="dark"] .theme-btn {
+      border-color: #444;
+    }
+
+    [data-theme="dark"] .theme-btn::after {
+      left: 3px;
+      background: var(--accent);
+    }
+
+    [data-theme="light"] .theme-btn {
+      border-color: #d1d5db;
+      background: #e5e7eb;
+    }
+
+    [data-theme="light"] .theme-btn::after {
+      left: 23px;
+      background: var(--accent);
+    }
+
+    .slot-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 6px;
+      padding: 3px 12px;
+      transition: all 0.2s;
+    }
+
+    [data-theme="dark"] .slot-badge {
+      background: rgba(124, 108, 247, 0.12);
+      border: 1px solid rgba(124, 108, 247, 0.3);
+    }
+
+    [data-theme="light"] .slot-badge {
+      background: rgba(108, 92, 231, 0.08);
+      border: 1px solid rgba(108, 92, 231, 0.25);
+    }
+
+    .slot-badge .slot-name {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .nav-btn {
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border-default);
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+
+    .nav-btn:hover {
+      background: var(--bg-hover);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .go-btn {
+      padding: 4px 14px;
+      border-radius: 6px;
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .go-btn:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(124, 108, 247, 0.3);
+    }
+
+    .ctrl-btn {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      border: none;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+
+    .ctrl-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .grid-btn {
+      padding: 6px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border-default);
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s;
+    }
+
+    .grid-btn:hover {
+      border-color: var(--accent);
+      background: var(--accent-bg);
+    }
+
+    .url-input {
+      flex: 1;
+      height: 26px;
+      padding: 0 10px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-default);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-size: 10px;
+      font-family: 'Inter', monospace;
+      outline: none;
+      min-width: 40px;
+      transition: all 0.15s;
+    }
+
+    .url-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(124, 108, 247, 0.12);
+    }
+
+    .feature-tab-btn {
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid var(--border-default);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+    }
+
+    .feature-tab-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .feature-tab-btn.active {
+      background: var(--accent) !important;
+      border-color: var(--accent) !important;
+      color: #fff !important;
+    }
+
+    .slot-sw {
+      width: 34px;
+      height: 30px;
+      border-radius: 8px;
+      border: 1.5px solid var(--border-default);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .slot-sw:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .slot-sw.active {
+      background: var(--accent) !important;
+      border-color: var(--accent) !important;
+      color: #fff !important;
+    }
+
+    .status-bar {
+      padding: 8px 10px;
+      background: var(--bg-elevated);
+      border-radius: 8px;
+      font-size: 11px;
+      border-left: 3px solid var(--border-default);
+      color: var(--text-secondary);
+      transition: all 0.3s;
+    }
   </style>
 </head>
-<body class="bg-dark-100 text-gray-200 h-screen overflow-hidden font-sans">
 
-  <!-- GRID MODE -->
-  <div id="gridMode" class="grid grid-cols-2 grid-rows-1 w-full h-screen"></div>
+<body style="margin:0; padding:0; height:100vh; overflow:hidden;">
 
-  <!-- EXPANDED MODE -->
-  <div id="expandedMode" class="flex h-screen w-full hidden">
-    <div class="w-[30%] h-screen bg-dark-200 overflow-y-auto p-4 flex flex-col gap-3 border-r border-dark-300">
+  <% var accounts=JSON.parse(slotAccounts) %>
 
-      <!-- Header -->
-      <div>
-        <div class="flex items-center justify-between pb-2.5 border-b border-dark-300">
-          <h1 class="text-xl font-bold text-accent">🤖 <span id="expandedTitle">Browser 1</span></h1>
-          <button onclick="collapseAll()" class="px-3 py-1.5 bg-accent hover:bg-accent-light text-white rounded-md text-xs font-bold transition">⊞ Grid</button>
-        </div>
-        <div id="slotSwitcher" class="flex gap-1 mt-2.5 flex-wrap"></div>
-      </div>
-
-      <!-- FEATURE TABS -->
-      <% if (features.length > 0) { %>
-      <div>
-        <div class="flex gap-1 mb-2 flex-wrap">
-          <% features.forEach(function(f, idx) { %>
-            <button onclick="switchFeatureTab('<%= f.name %>')"
-              class="feature-tab px-3 py-1.5 rounded-md text-xs font-semibold transition <%= idx === 0 ? 'bg-accent text-white' : 'bg-dark-300 text-gray-400 hover:text-white hover:bg-dark-100' %>"
-              data-tab="<%= f.name %>">
-              <%= f.name.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) %>
-            </button>
-          <% }) %>
-        </div>
-        <% features.forEach(function(f, idx) { %>
-          <div class="feature-panel" data-panel="<%= f.name %>" style="<%= idx === 0 ? '' : 'display:none;' %>">
-            <%- f.ui %>
+    <!-- ========== GRID MODE ========== -->
+    <div id="gridMode"
+      style="display:grid; grid-template-columns:repeat(2, 1fr); grid-template-rows:1fr; width:100%; height:100vh;">
+      <% for (let i=0; i < slotCount; i++) { %>
+        <% var acc=accounts[i] %>
+          <div
+            style="border-right:1px solid var(--border-subtle); display:flex; flex-direction:column; overflow:hidden;">
+            <% if (!acc) { %>
+              <div
+                style="height:80px; min-height:80px; background:var(--bg-panel); border-bottom:1px solid var(--border-subtle); display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                <span style="font-size:10px; font-weight:700; color:var(--text-tertiary); letter-spacing:0.1em;">SLOT
+                  <%= i+1 %> — EMPTY
+                </span>
+                <span style="font-size:9px; color:var(--text-tertiary); margin-top:3px; opacity:0.5;">No account
+                  assigned</span>
+              </div>
+              <% } else { %>
+                <div
+                  style="height:80px; min-height:80px; background:var(--bg-panel); border-bottom:1px solid var(--border-default); display:flex; flex-direction:column; justify-content:space-between; padding:6px 0; position:relative; box-shadow:var(--shadow);">
+                  <!-- Accent line -->
+                  <div
+                    style="position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg, var(--accent), #e94560, var(--accent)); background-size:200% 100%; animation:shimmer 4s linear infinite;">
+                  </div>
+                  <!-- Row 1 -->
+                  <div style="display:flex; align-items:center; justify-content:space-between; padding:0 10px;">
+                    <div class="slot-badge">
+                      <span
+                        style="width:6px; height:6px; border-radius:50%; background:var(--success); animation:pulse-dot 2s infinite; display:inline-block;"></span>
+                      <span class="slot-name">
+                        <%= acc.name %>
+                      </span>
+                    </div>
+                    <div style="display:flex; gap:5px;">
+                      <button onclick="expandSlot(<%= i %>)" title="Expand" class="ctrl-btn"
+                        style="background:rgba(34,197,94,0.15); color:var(--success);">⛶</button>
+                      <button onclick="closeBrowserSlot(<%= i %>)" title="Close" class="ctrl-btn"
+                        style="background:rgba(239,68,68,0.15); color:var(--danger);">✕</button>
+                    </div>
+                  </div>
+                  <!-- Row 2: Nav -->
+                  <div style="display:flex; align-items:center; gap:4px; padding:0 10px;">
+                    <button onclick="goBackSlot(<%= i %>)" class="nav-btn">◀</button>
+                    <button onclick="goFwdSlot(<%= i %>)" class="nav-btn">▶</button>
+                    <button onclick="reloadSlot(<%= i %>)" class="nav-btn">⟳</button>
+                    <input type="text" id="url-<%= i %>" value="https://www.facebook.com" spellcheck="false"
+                      class="url-input">
+                    <button onclick="navSlot(<%= i %>)" class="go-btn">GO</button>
+                  </div>
+                  <!-- Row 3: Status -->
+                  <div
+                    style="display:flex; align-items:center; gap:6px; padding:0 12px; font-size:9px; color:var(--text-tertiary);">
+                    <span>Status:</span>
+                    <span id="gstatus-<%= i %>" style="color:var(--success); font-weight:700;">Opening...</span>
+                  </div>
+                </div>
+                <% } %>
           </div>
-        <% }) %>
-      </div>
-      <% } %>
+          <% } %>
+    </div>
 
-      <!-- Status -->
-      <div class="bg-dark-300 rounded-lg p-3">
-        <h3 class="text-xs text-gray-500 uppercase tracking-wider mb-2">Status</h3>
-        <div id="status" class="px-2.5 py-2 bg-dark-100 rounded text-xs border-l-[3px] border-gray-600">Ready</div>
+    <!-- ========== EXPANDED MODE ========== -->
+    <div id="expandedMode" class="hidden" style="display:none; height:100vh; width:100%; position:relative;">
+      <div id="sidebar"
+        style="width:350px; min-width:250px; max-width:600px; height:100vh; overflow-y:auto; display:flex; flex-direction:column; background:var(--bg-panel); border-right:1px solid var(--border-default); position:absolute; left:0; top:0; z-index:5;">
+        <!-- Header -->
+        <div
+          style="padding:14px 16px; border-bottom:1px solid var(--border-default); background:var(--bg-card); flex-shrink:0;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div
+                style="width:34px; height:34px; border-radius:10px; background:linear-gradient(135deg, var(--accent), #e94560); display:flex; align-items:center; justify-content:center; font-size:16px; box-shadow:0 4px 12px rgba(124,108,247,0.25);">
+                🤖</div>
+              <div>
+                <div id="expandedTitle"
+                  style="font-size:14px; font-weight:800; color:var(--text-heading); line-height:1.2;">Browser 1</div>
+                <div
+                  style="font-size:9px; color:var(--text-tertiary); font-weight:600; text-transform:uppercase; letter-spacing:0.1em;">
+                  Control Panel</div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <button class="theme-btn" onclick="toggleTheme()" title="Toggle Theme"></button>
+              <button onclick="collapseAll()" class="grid-btn">⊞ Grid</button>
+            </div>
+          </div>
+          <!-- Slot Switcher -->
+          <div id="slotSwitcher" style="display:flex; gap:6px; flex-wrap:wrap;"></div>
+        </div>
+        <!-- Feature Tabs & Content -->
+        <div style="flex:1; overflow-y:auto; padding:14px;">
+          <% if (features.length> 0) { %>
+            <div
+              style="display:flex; gap:5px; margin-bottom:14px; flex-wrap:wrap; padding-bottom:12px; border-bottom:1px solid var(--border-subtle);">
+              <% features.forEach(function(f, idx) { %>
+                <button onclick="switchFeatureTab('<%= f.name %>')" class="feature-tab-btn feature-tab"
+                  data-tab="<%= f.name %>">
+                  <%= f.name.replace(/-/g, ' ' ).replace(/\b\w/g, c=> c.toUpperCase()) %>
+                </button>
+                <% }) %>
+            </div>
+            <!-- INJECT_FEATURE_UIS -->
+            <% } %>
+        </div>
+        <!-- Status Bar -->
+        <div
+          style="padding:10px 14px; border-top:1px solid var(--border-default); background:var(--bg-card); flex-shrink:0;">
+          <div
+            style="font-size:8px; font-weight:700; text-transform:uppercase; letter-spacing:0.15em; color:var(--text-tertiary); margin-bottom:5px;">
+            Status</div>
+          <div id="status" class="status-bar">Ready</div>
+        </div>
+      </div>
+      <!-- Resize Handle -->
+      <div id="resizeHandle"
+        style="width:6px; height:100vh; cursor:col-resize; position:absolute; left:350px; top:0; z-index:10; display:flex; align-items:center; justify-content:center; background:var(--bg-elevated); border-left:1px solid var(--border-subtle); border-right:1px solid var(--border-subtle);">
+        <div class="rh-line"
+          style="width:2px; height:40px; border-radius:2px; background:var(--border-default); transition:background 0.15s;">
+        </div>
       </div>
     </div>
-  </div>
 
-  <script>
-    const SLOT_COUNT = <%= slotCount %>
-    const slotAccounts = <%- slotAccounts %>
-    let currentSlot = 0
-    const slotOpen = new Array(SLOT_COUNT).fill(false)
-    const slotSwitchCallbacks = [] // features register here
+    <div id="slotData" style="display:none" data-accounts='<%= slotAccounts %>'></div>
+    <script>
+      var SLOT_COUNT = <%= slotCount %>;
+      var slotAccounts = JSON.parse(document.getElementById('slotData').dataset.accounts);
+      var currentSlot = 0;
+      var sidebarWidth = 350;
+      var slotOpen = new Array(SLOT_COUNT).fill(false);
+      var slotSwitchCallbacks = [];
 
-    // === FEATURE TABS ===
-    function switchFeatureTab(name) {
-      document.querySelectorAll('.feature-panel').forEach(p => {
-        p.style.display = p.dataset.panel === name ? '' : 'none'
-      })
-      document.querySelectorAll('.feature-tab').forEach(t => {
-        const isActive = t.dataset.tab === name
-        t.className = 'feature-tab px-3 py-1.5 rounded-md text-xs font-semibold transition ' +
-          (isActive ? 'bg-accent text-white' : 'bg-dark-300 text-gray-400 hover:text-white hover:bg-dark-100')
-      })
-    }
+      // === THEME ===
+      function toggleTheme() {
+        var html = document.documentElement;
+        var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        try { localStorage.setItem('fboomx-theme', next); } catch (e) { }
+      }
+      try { var saved = localStorage.getItem('fboomx-theme'); if (saved) document.documentElement.setAttribute('data-theme', saved); } catch (e) { }
 
-    // === BUILD PANEL TEMPLATE ===
-    function buildPanelHTML(i) {
-      const acc = slotAccounts[i]
-      const name = acc ? acc.name.toUpperCase() : 'EMPTY'
-      const isEmpty = !acc
-
-      if (isEmpty) {
-        return `
-          <div class="h-[56px] min-h-[56px] bg-dark-400 flex flex-col border-b-2 border-gray-700">
-            <div class="flex items-center justify-between px-1.5 py-0.5 bg-dark-300 h-5">
-              <span class="text-[10px] font-bold text-gray-600 tracking-wide">${name}</span>
-            </div>
-            <div class="flex-1 flex items-center justify-center text-[10px] text-gray-600">No account assigned</div>
-          </div>
-        `
+      // === FEATURE TABS ===
+      function switchFeatureTab(name) {
+        document.querySelectorAll('.feature-panel').forEach(function (p) { p.style.display = p.dataset.panel === name ? '' : 'none'; });
+        document.querySelectorAll('.feature-tab-btn').forEach(function (t) {
+          if (t.dataset.tab === name) t.classList.add('active');
+          else t.classList.remove('active');
+        });
       }
 
-      return `
-        <div class="h-[56px] min-h-[56px] bg-gradient-to-b from-[#1a3a6e] to-dark-200 flex flex-col border-b-2 border-accent">
-          <div class="flex items-center justify-between px-1.5 py-0.5 bg-dark-300 h-5">
-            <span class="text-[10px] font-bold text-accent tracking-wide">${name}</span>
-            <div class="flex gap-0.5">
-              <button onclick="expandSlot(${i})" title="Expand" class="w-[18px] h-[18px] bg-emerald-600 hover:bg-emerald-500 text-white rounded-sm text-[10px] flex items-center justify-center transition">⛶</button>
-              <button onclick="closeBrowserSlot(${i})" title="Close" class="w-[18px] h-[18px] bg-red-600 hover:bg-red-500 text-white rounded-sm text-[10px] flex items-center justify-center transition">✕</button>
-            </div>
-          </div>
-          <div class="flex items-center gap-0.5 px-1 h-[22px]">
-            <button onclick="goBackSlot(${i})" class="px-1 py-0.5 bg-dark-100 hover:bg-accent text-gray-400 hover:text-white rounded-sm text-[10px] font-semibold transition">◀</button>
-            <button onclick="goFwdSlot(${i})" class="px-1 py-0.5 bg-dark-100 hover:bg-accent text-gray-400 hover:text-white rounded-sm text-[10px] font-semibold transition">▶</button>
-            <button onclick="reloadSlot(${i})" class="px-1 py-0.5 bg-dark-100 hover:bg-accent text-gray-400 hover:text-white rounded-sm text-[10px] font-semibold transition">⟳</button>
-            <input type="text" id="url-${i}" value="https://www.facebook.com" class="flex-1 h-[18px] px-1 bg-dark-100 border border-dark-300 rounded-sm text-gray-200 text-[9px] outline-none focus:border-accent min-w-[40px]">
-            <button onclick="navSlot(${i})" class="px-1 py-0.5 bg-dark-100 hover:bg-accent text-gray-400 hover:text-white rounded-sm text-[10px] font-semibold transition">Go</button>
-          </div>
-          <div class="flex items-center gap-1 px-1.5 h-[14px] bg-dark-400 text-[9px] text-gray-500">
-            <span>Status:</span> <span id="gstatus-${i}" class="text-emerald-500 font-semibold">Opening...</span>
-          </div>
-        </div>
-      `
-    }
+      // === SLOT SWITCHER ===
+      var switcher = document.getElementById('slotSwitcher');
+      for (var i = 0; i < SLOT_COUNT; i++) {
+        (function (idx) {
+          var acc = slotAccounts[idx];
+          if (!acc) return;
+          var btn = document.createElement('button');
+          btn.className = 'slot-sw';
+          btn.dataset.slot = idx;
+          btn.textContent = idx + 1;
+          btn.title = acc.name;
+          btn.onclick = function () { switchExpanded(idx); };
+          switcher.appendChild(btn);
+        })(i);
+      }
 
-    // Generate panels
-    const grid = document.getElementById('gridMode')
-    for (let i = 0; i < SLOT_COUNT; i++) {
-      const panel = document.createElement('div')
-      panel.className = 'border border-dark-300 flex flex-col overflow-hidden'
-      panel.innerHTML = buildPanelHTML(i)
-      grid.appendChild(panel)
-    }
+      // === RESIZE HANDLE ===
+      (function () {
+        var handle = document.getElementById('resizeHandle');
+        var sidebar = document.getElementById('sidebar');
+        var isDragging = false;
+        handle.addEventListener('mousedown', function (e) {
+          isDragging = true; document.body.style.cursor = 'col-resize'; document.body.style.userSelect = 'none'; e.preventDefault();
+        });
+        document.addEventListener('mousemove', function (e) {
+          if (!isDragging) return;
+          var w = Math.min(600, Math.max(250, e.clientX));
+          sidebar.style.width = w + 'px'; handle.style.left = w + 'px'; sidebarWidth = w;
+          window.api.invoke('resize-sidebar', w);
+        });
+        document.addEventListener('mouseup', function () {
+          if (isDragging) { isDragging = false; document.body.style.cursor = ''; document.body.style.userSelect = ''; }
+        });
+      })();
 
-    // Generate slot switcher
-    const switcher = document.getElementById('slotSwitcher')
-    for (let i = 0; i < SLOT_COUNT; i++) {
-      const acc = slotAccounts[i]
-      if (!acc) continue
-      const btn = document.createElement('button')
-      btn.className = 'slot-btn w-8 h-7 rounded-md border-2 border-dark-300 bg-dark-100 text-gray-500 text-xs font-bold cursor-pointer transition hover:border-accent hover:text-white'
-      btn.dataset.slot = i
-      btn.textContent = i + 1
-      btn.title = acc.name
-      btn.onclick = () => switchExpanded(i)
-      switcher.appendChild(btn)
-    }
+      // === ALL-OPENED ===
+      window.api.onAllOpened(function () {
+        for (var j = 0; j < SLOT_COUNT; j++) {
+          if (slotAccounts[j]) { slotOpen[j] = true; setGridStatus(j, 'Opened ✓'); }
+        }
+      });
 
-    // Auto-open notification
-    window.api.onAllOpened(() => {
-      for (let i = 0; i < SLOT_COUNT; i++) {
-        if (slotAccounts[i]) {
-          slotOpen[i] = true
-          setGridStatus(i, 'Opened ✓')
+      // === GRID ACTIONS ===
+      function setGridStatus(s, m) { var el = document.getElementById('gstatus-' + s); if (el) el.textContent = m; }
+      function closeBrowserSlot(s) { window.api.closeBrowser(s).then(function () { slotOpen[s] = false; setGridStatus(s, 'Closed'); }); }
+      function goBackSlot(s) { window.api.goBack(s); }
+      function goFwdSlot(s) { window.api.goForward(s); }
+      function reloadSlot(s) { setGridStatus(s, 'Reloading...'); window.api.reloadPage(s).then(function () { setGridStatus(s, 'Reloaded ✓'); }); }
+      function navSlot(s) { var u = document.getElementById('url-' + s).value; if (!u) return; setGridStatus(s, 'Navigating...'); window.api.navigate(s, u).then(function () { setGridStatus(s, 'Done ✓'); }); }
+
+      // === EXPAND / COLLAPSE ===
+      function expandSlot(slot) {
+        slotSwitchCallbacks.forEach(function (cb) { cb('save', currentSlot); });
+        currentSlot = slot;
+        slotSwitchCallbacks.forEach(function (cb) { cb('load', currentSlot); });
+        var acc = slotAccounts[slot];
+        document.getElementById('gridMode').style.display = 'none';
+        document.getElementById('expandedMode').classList.remove('hidden');
+        document.getElementById('expandedMode').style.display = 'block';
+        document.getElementById('expandedTitle').textContent = acc ? acc.name : 'Browser ' + (slot + 1);
+        document.querySelectorAll('.slot-sw').forEach(function (b) {
+          if (parseInt(b.dataset.slot) === slot) b.classList.add('active');
+          else b.classList.remove('active');
+        });
+        var firstTab = document.querySelector('.feature-tab-btn');
+        if (firstTab) switchFeatureTab(firstTab.dataset.tab);
+        window.api.expandSlot(slot, sidebarWidth);
+      }
+      function switchExpanded(slot) { expandSlot(slot); }
+      function collapseAll() {
+        document.getElementById('gridMode').style.display = 'grid';
+        document.getElementById('expandedMode').style.display = 'none';
+        window.api.collapseAll();
+      }
+
+      // === STATUS ===
+      function setStatus(msg, type) {
+        type = type || 'info';
+        var el = document.getElementById('status');
+        if (!el) return;
+        el.textContent = msg;
+        var colors = { success: 'var(--success)', error: 'var(--danger)', info: 'var(--accent)' };
+        el.style.borderLeftColor = colors[type] || 'var(--border-default)';
+        el.style.color = colors[type] || 'var(--text-secondary)';
+      }
+
+      // === ACTIVITY LOCK (per-slot, one activity at a time) ===
+      var _slotActivity = {}; // { slot: 'Feature Name' }
+
+      function getSlotActivity(slot) {
+        return _slotActivity[slot] || null;
+      }
+
+      function acquireSlotLock(slot, featureName) {
+        var current = _slotActivity[slot];
+        if (current && current !== featureName) {
+          showActivityToast(current);
+          return false;
+        }
+        _slotActivity[slot] = featureName;
+        return true;
+      }
+
+      function releaseSlotLock(slot, featureName) {
+        if (_slotActivity[slot] === featureName) {
+          delete _slotActivity[slot];
         }
       }
-    })
 
-    // === GRID ACTIONS ===
-    function setGridStatus(slot, msg) {
-      const el = document.getElementById('gstatus-' + slot)
-      if (el) el.textContent = msg
-    }
+      // Toast notification for activity conflict
+      var _toastTimer = null;
+      var _toastRestoreTimer = null;
+      function showActivityToast(runningActivity) {
+        var existing = document.getElementById('activityToast');
+        if (existing) existing.remove();
+        clearTimeout(_toastTimer);
+        clearTimeout(_toastRestoreTimer);
 
-    async function closeBrowserSlot(slot) {
-      await window.api.closeBrowser(slot)
-      slotOpen[slot] = false
-      setGridStatus(slot, 'Closed')
-    }
-    async function goBackSlot(slot) { await window.api.goBack(slot) }
-    async function goFwdSlot(slot) { await window.api.goForward(slot) }
-    async function reloadSlot(slot) {
-      setGridStatus(slot, 'Reloading...')
-      await window.api.reloadPage(slot)
-      setGridStatus(slot, 'Reloaded ✓')
-    }
-    async function navSlot(slot) {
-      const url = document.getElementById('url-' + slot).value
-      if (!url) return
-      setGridStatus(slot, 'Navigating...')
-      await window.api.navigate(slot, url)
-      setGridStatus(slot, 'Done ✓')
-    }
+        // Hide browser views so toast is visible above them
+        window.api.invoke('hide-browser-views');
 
-    // === EXPAND / COLLAPSE ===
-    async function expandSlot(slot) {
-      // Save current slot data
-      slotSwitchCallbacks.forEach(cb => cb('save', currentSlot))
-      currentSlot = slot
-      // Load new slot data
-      slotSwitchCallbacks.forEach(cb => cb('load', currentSlot))
-      const acc = slotAccounts[slot]
-      document.getElementById('gridMode').style.display = 'none'
-      document.getElementById('expandedMode').classList.remove('hidden')
-      document.getElementById('expandedMode').style.display = 'flex'
-      document.getElementById('expandedTitle').textContent = acc ? acc.name : 'Browser ' + (slot + 1)
-      document.querySelectorAll('.slot-btn').forEach(b => {
-        const isActive = parseInt(b.dataset.slot) === slot
-        b.classList.toggle('!bg-accent', isActive)
-        b.classList.toggle('!border-accent', isActive)
-        b.classList.toggle('!text-white', isActive)
-      })
-      await window.api.expandSlot(slot)
-    }
-    async function switchExpanded(slot) { await expandSlot(slot) }
+        var toast = document.createElement('div');
+        toast.id = 'activityToast';
+        toast.innerHTML =
+          '<div style="display:flex;align-items:center;gap:10px;">' +
+          '<div style="width:32px;height:32px;border-radius:8px;background:rgba(239,68,68,0.15);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">⚠️</div>' +
+          '<div>' +
+          '<div style="font-size:11px;font-weight:700;color:var(--text-heading);margin-bottom:2px;">Activity in Progress</div>' +
+          '<div style="font-size:10px;color:var(--text-secondary);line-height:1.4;"><span style="font-weight:700;color:#f59e0b;">' + runningActivity + '</span> is currently running on this account. Stop it first before starting another activity.</div>' +
+          '</div>' +
+          '</div>';
+        toast.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:9999;background:var(--bg-card);border:1px solid var(--danger);border-radius:12px;padding:14px 18px;max-width:340px;box-shadow:0 8px 32px rgba(0,0,0,0.4),0 0 0 1px rgba(239,68,68,0.2);opacity:0;transform:translateY(20px) scale(0.95);transition:all 0.3s cubic-bezier(0.16,1,0.3,1);';
+        document.body.appendChild(toast);
 
-    async function collapseAll() {
-      document.getElementById('gridMode').style.display = 'grid'
-      document.getElementById('expandedMode').style.display = 'none'
-      await window.api.collapseAll()
-    }
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateY(0) scale(1)';
+          });
+        });
 
-    // === EXPANDED ACTIONS ===
-    function setStatus(msg, type = 'info') {
-      const el = document.getElementById('status')
-      if (!el) return
-      el.textContent = msg
-      el.className = 'px-2.5 py-2 bg-dark-100 rounded text-xs border-l-[3px]'
-      if (type === 'info') el.classList.add('border-blue-500')
-      else if (type === 'success') el.classList.add('border-emerald-500', 'text-emerald-400')
-      else if (type === 'error') el.classList.add('border-red-500', 'text-red-400')
-    }
+        _toastTimer = setTimeout(function () {
+          toast.style.opacity = '0';
+          toast.style.transform = 'translateY(20px) scale(0.95)';
+          setTimeout(function () { if (toast.parentNode) toast.remove(); }, 300);
+          // Restore browser views after toast fades out
+          _toastRestoreTimer = setTimeout(function () {
+            window.api.invoke('show-browser-views');
+          }, 350);
+        }, 3000);
+      }
+    </script>
 
-
-  </script>
-
-  <!-- AUTO-LOADED FEATURE SCRIPTS -->
-  <% features.forEach(function(f) { %>
-    <script><%- f.client %></script>
-  <% }) %>
-
+    <!-- INJECT_FEATURE_UIS_SCRIPT -->
+    <!-- INJECT_CLIENT_SCRIPTS -->
 </body>
+
 </html>

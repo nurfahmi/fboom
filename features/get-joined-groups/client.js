@@ -1,16 +1,18 @@
 // Get Joined Groups — per-slot data
-const _groupSlotData = {} // { slot: { groups: [] } }
+const _groupSlotData = {} // { slot: { groups: [], isScraping: false } }
 let joinedGroups = []
 let isScrapingGroups = false
 
 function _saveGroupSlot(slot) {
-  _groupSlotData[slot] = { groups: joinedGroups }
+  _groupSlotData[slot] = { groups: joinedGroups, isScraping: isScrapingGroups }
 }
 
 function _loadGroupSlot(slot) {
-  const data = _groupSlotData[slot] || { groups: [] }
+  const data = _groupSlotData[slot] || { groups: [], isScraping: false }
   joinedGroups = data.groups
+  isScrapingGroups = data.isScraping
   renderGroupTable()
+  updateGroupButtons()
 }
 
 // Register for slot switching
@@ -28,13 +30,20 @@ window.api.on('groups-found', (slot, groups) => {
 })
 
 window.api.on('groups-done', (slot) => {
-  if (slot !== currentSlot) return
-  isScrapingGroups = false
-  updateGroupButtons()
-  setStatus('Scraping complete! Found ' + joinedGroups.length + ' groups', 'success')
+  if (slot === currentSlot) {
+    isScrapingGroups = false
+    updateGroupButtons()
+  } else {
+    if (_groupSlotData[slot]) _groupSlotData[slot].isScraping = false
+  }
+  releaseSlotLock(slot, 'Get Joined Groups')
+  const count = (_groupSlotData[slot] && _groupSlotData[slot].groups) ? _groupSlotData[slot].groups.length : joinedGroups.length
+  setSlotStatus(slot, 'Scraping complete! Found ' + count + ' groups', 'success')
 })
 
 async function startGetGroups() {
+  if (!acquireSlotLock(currentSlot, 'Get Joined Groups')) return
+
   isScrapingGroups = true
   joinedGroups = []
   renderGroupTable()
@@ -43,6 +52,7 @@ async function startGetGroups() {
 
   const res = await window.api.invoke('start-get-groups', currentSlot)
   isScrapingGroups = false
+  releaseSlotLock(currentSlot, 'Get Joined Groups')
   updateGroupButtons()
 
   if (res.ok) {
@@ -57,6 +67,7 @@ async function startGetGroups() {
 async function stopGetGroups() {
   await window.api.invoke('stop-get-groups', currentSlot)
   isScrapingGroups = false
+  releaseSlotLock(currentSlot, 'Get Joined Groups')
   updateGroupButtons()
   setStatus('Scraping stopped. Found ' + joinedGroups.length + ' groups', 'info')
 }

@@ -103,6 +103,8 @@
             <table class="w-full text-xs">
                 <thead>
                     <tr class="bg-dark-400 text-gray-500 uppercase sticky top-0">
+                        <th class="px-1.5 py-1 text-center w-6"><input type="checkbox"
+                                onchange="toggleJgSelectAll(this.checked)" title="Select All"></th>
                         <th class="px-2 py-1 text-left w-6">No</th>
                         <th class="px-2 py-1 text-left">Group Name</th>
                         <th class="px-2 py-1 text-left w-24">Group ID</th>
@@ -111,7 +113,7 @@
                 </thead>
                 <tbody id="jgTableBody">
                     <tr>
-                        <td colspan="4" class="px-2 py-3 text-center text-gray-600">No groups. Search or load from TXT.
+                        <td colspan="5" class="px-2 py-3 text-center text-gray-600">No groups. Search or load from TXT.
                         </td>
                     </tr>
                 </tbody>

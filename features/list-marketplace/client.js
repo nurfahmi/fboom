@@ -222,10 +222,10 @@ function renderMpTable() {
         const typeIcon = p.listingType === 'vehicle' ? '🚗' : p.listingType === 'property' ? '🏠' : '🛍️'
         let statusBadge = ''
         switch (p.status) {
-            case 'success': statusBadge = '<span class="text-emerald-400">✓</span>'; break
-            case 'error': statusBadge = '<span class="text-red-400">✕</span>'; break
-            case 'posting': statusBadge = '<span class="text-yellow-400">⟳</span>'; break
-            default: statusBadge = '<span class="text-gray-600">—</span>'
+            case 'success': statusBadge = '<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;background:rgba(34,197,94,0.15);color:#22c55e;">Success</span>'; break
+            case 'error': statusBadge = '<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;background:rgba(239,68,68,0.15);color:#ef4444;">Failed</span>'; break
+            case 'posting': statusBadge = '<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;background:rgba(234,179,8,0.15);color:#eab308;">Posting...</span>'; break
+            default: statusBadge = '<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:600;background:transparent;color:#666;">Pending</span>'
         }
         const checked = p._selected ? 'checked' : ''
         return `<tr class="border-b border-dark-100 hover:bg-dark-400/50">
@@ -364,6 +364,8 @@ async function startMarketplace() {
 
     _saveMpSlot(currentSlot)
 
+    if (!acquireSlotLock(currentSlot, 'List Marketplace')) return
+
     // Reset statuses on selected
     selected.forEach(p => p.status = '')
     renderMpTable()
@@ -390,6 +392,7 @@ async function startMarketplace() {
     }
     mpRunning = false
     d.running = false
+    releaseSlotLock(currentSlot, 'List Marketplace')
     updateMpButtons()
 }
 
@@ -398,6 +401,7 @@ async function stopMarketplace() {
     mpRunning = false
     const d = _getCurMpData()
     d.running = false
+    releaseSlotLock(currentSlot, 'List Marketplace')
     updateMpButtons()
     setStatus('Marketplace listing stopped.')
 }
@@ -409,7 +413,9 @@ window.api.on('mp-progress', (slot, info) => {
     const d = _mpSlotData[slot]
     if (d && info.productId) {
         const p = d.products.find(x => x.id === info.productId)
-        if (p) p.status = info.status
+        if (p && info.status !== 'waiting' && info.status !== 'resting') {
+            p.status = info.status
+        }
     }
     if (slot !== currentSlot) return
     renderMpTable()
@@ -429,6 +435,7 @@ window.api.on('mp-done', (slot, summary) => {
     mpRunning = false
     const d = _getCurMpData()
     d.running = false
+    releaseSlotLock(slot, 'List Marketplace')
     updateMpButtons()
     setStatus(`Done! ✅${summary.successCount} ❌${summary.failCount} / ${summary.total} products`, 'success')
 })
@@ -500,7 +507,7 @@ function importFromGlobalMp(idx) {
 async function importGlobalMpTxt() {
     const result = await window.api.invoke('import-global-mp-txt')
     if (!result.ok) return
-    // Reload
+    // Reloadyy
     const fresh = await window.api.invoke('get-global-mp-products')
     _globalMpProducts = (fresh && fresh.ok) ? fresh.products : []
     renderGlobalMpTable()

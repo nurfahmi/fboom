@@ -28,7 +28,12 @@ module.exports = function (getPage) {
   }
 
   ipcMain.handle('start-auto-comment', async (e, slot, config) => {
-    const page = getPage(slot)
+    // Safe send helper — prevents 'Object has been destroyed' errors
+    const safeSend = (...args) => {
+      try { if (!e.sender.isDestroyed()) e.sender.send(...args) } catch (_) { }
+    }
+
+    const page = getPage(slot, e.sender)
     if (!page) return { ok: false, error: 'No browser open' }
 
     const { urls, commentText, imagePath, delayMin, delayMax, restAfter, restSeconds } = config
@@ -43,7 +48,7 @@ module.exports = function (getPage) {
       if (!state[slot] || !state[slot].running) break
 
       const url = urls[i]
-      e.sender.send('comment-progress', slot, { index: i, status: 'processing', total: urls.length })
+      safeSend('comment-progress', slot, { index: i, status: 'processing', total: urls.length })
 
       try {
         // Navigate to post
@@ -58,26 +63,26 @@ module.exports = function (getPage) {
 
         if (success) {
           successCount++
-          e.sender.send('comment-progress', slot, { index: i, status: 'success', total: urls.length, successCount, failCount })
+          safeSend('comment-progress', slot, { index: i, status: 'success', total: urls.length, successCount, failCount })
         } else {
           failCount++
-          e.sender.send('comment-progress', slot, { index: i, status: 'error', error: 'Comment box not found', total: urls.length, successCount, failCount })
+          safeSend('comment-progress', slot, { index: i, status: 'error', error: 'Comment box not found', total: urls.length, successCount, failCount })
         }
       } catch (err) {
         failCount++
-        e.sender.send('comment-progress', slot, { index: i, status: 'error', error: err.message, total: urls.length, successCount, failCount })
+        safeSend('comment-progress', slot, { index: i, status: 'error', error: err.message, total: urls.length, successCount, failCount })
       }
 
       // Delay between comments (interruptible)
       if (i < urls.length - 1 && state[slot] && state[slot].running) {
         const delay = (delayMin + Math.random() * (delayMax - delayMin)) * 1000
-        e.sender.send('comment-progress', slot, { index: i, status: 'waiting', delay: Math.round(delay / 1000), total: urls.length, successCount, failCount })
+        safeSend('comment-progress', slot, { index: i, status: 'waiting', delay: Math.round(delay / 1000), total: urls.length, successCount, failCount })
         const continued = await interruptibleWait(page, delay, slot)
         if (!continued) break
 
         // Rest time
         if (restAfter > 0 && successCount > 0 && successCount % restAfter === 0) {
-          e.sender.send('comment-progress', slot, { index: i, status: 'resting', restSeconds, total: urls.length, successCount, failCount })
+          safeSend('comment-progress', slot, { index: i, status: 'resting', restSeconds, total: urls.length, successCount, failCount })
           const restContinued = await interruptibleWait(page, restSeconds * 1000, slot)
           if (!restContinued) break
         }
@@ -85,7 +90,7 @@ module.exports = function (getPage) {
     }
 
     state[slot] = null
-    e.sender.send('comment-done', slot, { successCount, failCount, total: urls.length })
+    safeSend('comment-done', slot, { successCount, failCount, total: urls.length })
     return { ok: true, successCount, failCount }
   })
 

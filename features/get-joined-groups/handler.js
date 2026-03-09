@@ -5,7 +5,7 @@ module.exports = function (getPage) {
   const scraping = {} // per-slot state
 
   ipcMain.handle('start-get-groups', async (e, slot) => {
-    const page = getPage(slot)
+    const page = getPage(slot, e.sender)
     if (!page) return { ok: false, error: 'No browser open' }
 
     scraping[slot] = { running: true, groups: new Map() }

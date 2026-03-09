@@ -168,6 +168,8 @@ async function startFeedEngagement() {
         return setStatus('Add at least one comment template!', 'error')
     }
 
+    if (!acquireSlotLock(currentSlot, 'Feed Engagement')) return
+
     feRunning = true
     data.running = true
     updateFeedButtons()
@@ -188,6 +190,7 @@ async function startFeedEngagement() {
     await window.api.invoke('start-feed-engagement', currentSlot, config)
     feRunning = false
     data.running = false
+    releaseSlotLock(currentSlot, 'Feed Engagement')
     updateFeedButtons()
 }
 
@@ -196,6 +199,7 @@ async function stopFeedEngagement() {
     feRunning = false
     const data = _getCurFeData()
     data.running = false
+    releaseSlotLock(currentSlot, 'Feed Engagement')
     updateFeedButtons()
     setStatus('Feed engagement stopped.')
 }
@@ -204,19 +208,22 @@ async function stopFeedEngagement() {
 // LISTEN TO EVENTS
 // ========================
 window.api.on('feed-engagement-progress', (slot, info) => {
-    if (slot !== currentSlot) return
     const errorStatuses = ['error']
-    setStatus(info.message || 'Processing...', errorStatuses.includes(info.status) ? 'error' : 'info')
+    setSlotStatus(slot, info.message || 'Processing...', errorStatuses.includes(info.status) ? 'error' : 'info')
 })
 
 window.api.on('feed-engagement-done', (slot, summary) => {
-    if (slot !== currentSlot) return
-    feRunning = false
-    const data = _getCurFeData()
-    data.running = false
-    updateFeedButtons()
+    if (slot === currentSlot) {
+        feRunning = false
+        const data = _getCurFeData()
+        data.running = false
+        updateFeedButtons()
+    } else {
+        if (_feSlotData[slot]) _feSlotData[slot].running = false
+    }
+    releaseSlotLock(slot, 'Feed Engagement')
     const msg = summary.error
         ? `Feed engagement error: ${summary.error}`
         : `Done! ❤️${summary.likeCount} likes 💬${summary.commentCount} comments`
-    setStatus(msg, summary.error ? 'error' : 'success')
+    setSlotStatus(slot, msg, summary.error ? 'error' : 'success')
 })

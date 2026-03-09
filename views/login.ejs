@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FBOOMX V2 — License Activation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: { 100: '#1a1a2e', 200: '#16213e', 300: '#0f3460', 400: '#0d1b3e' },
+                        accent: { DEFAULT: '#e94560', light: '#ff6b81' }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-app-region: drag;
+        }
+
+        input,
+        button {
+            -webkit-app-region: no-drag;
+        }
+
+        input {
+            -webkit-user-select: text;
+            user-select: text;
+        }
+
+        .bg-glow {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.12;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .glow-1 {
+            background: #e94560;
+            width: 250px;
+            height: 250px;
+            top: 10%;
+            left: 20%;
+        }
+
+        .glow-2 {
+            background: #0f3460;
+            width: 300px;
+            height: 300px;
+            bottom: 10%;
+            right: 15%;
+            animation-delay: 4s;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translate(0, 0);
+            }
+
+            50% {
+                transform: translate(25px, -25px);
+            }
+        }
+
+        .card-glow {
+            box-shadow: 0 0 50px rgba(233, 69, 96, 0.08), 0 0 100px rgba(15, 52, 96, 0.08);
+        }
+
+        input:focus {
+            box-shadow: 0 0 0 2px rgba(233, 69, 96, 0.3);
+        }
+
+        .btn-shimmer {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-shimmer::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.08) 50%, transparent 70%);
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                transform: translateX(-100%) rotate(45deg);
+            }
+
+            100% {
+                transform: translateX(100%) rotate(45deg);
+            }
+        }
+
+        .spinner {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 0.6s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .status-enter {
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-dark-100 h-screen flex items-center justify-center overflow-hidden">
+
+    <!-- Background glows -->
+    <div class="bg-glow glow-1"></div>
+    <div class="bg-glow glow-2"></div>
+
+    <!-- Login Card -->
+    <div class="card-glow bg-dark-200 border border-dark-300 rounded-2xl p-8 w-[420px] relative z-10">
+
+        <!-- Header -->
+        <div class="text-center mb-7">
+            <img src="../logo.png" alt="FBOOMX" class="h-9 mx-auto mb-2"
+                style="filter: drop-shadow(0 0 12px rgba(59,130,246,0.2));">
+            <p class="text-gray-500 text-sm mt-2">Enter your license key to continue</p>
+        </div>
+
+        <!-- Status -->
+        <div id="status" class="hidden mb-4 px-4 py-3 rounded-lg text-sm border-l-[3px] status-enter"></div>
+
+        <!-- Form -->
+        <div id="loginForm">
+            <div class="mb-5">
+                <label class="block text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">License
+                    Key</label>
+                <input type="text" id="licenseKey" placeholder="XXXX-XXXX-XXXX-XXXX"
+                    class="w-full px-4 py-3 bg-dark-100 border border-dark-300 rounded-lg text-gray-200 text-sm outline-none focus:border-accent transition-all placeholder-gray-600"
+                    spellcheck="false" autocomplete="off">
+            </div>
+
+            <button id="loginBtn" onclick="handleLogin()"
+                class="btn-shimmer w-full py-3 bg-gradient-to-r from-accent to-[#c13750] hover:from-accent-light hover:to-accent text-white font-bold rounded-lg transition-all duration-300 text-sm cursor-pointer">
+                🚀 Activate License
+            </button>
+        </div>
+
+        <!-- Loading state (for initial session check) -->
+        <div id="loadingState" class="hidden text-center py-6">
+            <div class="spinner mx-auto mb-3" style="width:24px;height:24px;border-width:3px;"></div>
+            <p class="text-gray-400 text-sm">Checking session...</p>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-6 text-center">
+            <p class="text-gray-600 text-[11px]">© 2026 FBOOMX · All rights reserved</p>
+        </div>
+    </div>
+
+    <script>
+        let isProcessing = false
+
+        // On load: prefill license from expired session
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const session = await window.api.checkSession()
+                if (session && session.license) {
+                    document.getElementById('licenseKey').value = session.license
+                }
+            } catch (e) { }
+        })
+
+        async function handleLogin() {
+            if (isProcessing) return
+
+            const licenseKey = document.getElementById('licenseKey').value.trim()
+            if (!licenseKey) return setStatus('License key cannot be empty', 'error')
+            if (licenseKey.length < 5) return setStatus('License key is too short', 'error')
+
+            isProcessing = true
+            const btn = document.getElementById('loginBtn')
+            btn.innerHTML = '<span class="spinner" style="margin-right:6px;"></span> Validating...'
+            btn.disabled = true
+            btn.classList.add('opacity-70', 'cursor-not-allowed')
+
+            try {
+                setStatus('Connecting to server...', 'info')
+                const result = await window.api.login(licenseKey)
+
+                if (result.success) {
+                    setStatus('✅ License valid! Launching FBOOMX...', 'success')
+                    btn.innerHTML = '✅ Licensed!'
+                    setTimeout(() => window.api.proceed(), 1500)
+                } else {
+                    setStatus('❌ ' + result.error, 'error')
+                    resetButton()
+                }
+            } catch (err) {
+                setStatus('❌ Error: ' + err.message, 'error')
+                resetButton()
+            }
+        }
+
+        function resetButton() {
+            const btn = document.getElementById('loginBtn')
+            btn.innerHTML = '🚀 Activate License'
+            btn.disabled = false
+            btn.classList.remove('opacity-70', 'cursor-not-allowed')
+            isProcessing = false
+        }
+
+        function setStatus(msg, type) {
+            const el = document.getElementById('status')
+            el.className = 'mb-4 px-4 py-3 rounded-lg text-sm border-l-[3px] status-enter'
+            el.textContent = msg
+            if (type === 'success') el.classList.add('bg-emerald-900/50', 'text-emerald-400', 'border-emerald-600')
+            else if (type === 'error') el.classList.add('bg-red-900/50', 'text-red-400', 'border-red-600')
+            else el.classList.add('bg-blue-900/50', 'text-blue-400', 'border-blue-600')
+        }
+
+        // Auto-uppercase & remove spaces
+        document.getElementById('licenseKey').addEventListener('input', function (e) {
+            e.target.value = e.target.value.replace(/\s/g, '').toUpperCase()
+        })
+
+        // Enter to submit
+        document.getElementById('licenseKey').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') handleLogin()
+        })
+    </script>
+</body>
+
+</html>
